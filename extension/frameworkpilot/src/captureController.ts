@@ -12,6 +12,13 @@ export interface CaptureStatusMessage {
 export interface LocatorCandidatesMessage {
     command: 'locatorCandidates';
     candidates: LocatorCandidate[];
+    element: {
+        tagName: string;
+        ariaRole?: string;
+        textContent?: string;
+        id?: string;
+        testId?: string;
+    };
 }
 
 type OutgoingMessage = CaptureStatusMessage | LocatorCandidatesMessage;
@@ -91,7 +98,17 @@ export class CaptureController {
 
             const candidates = await buildLocatorCandidates(element, this.session.getUniquenessChecker());
 
-            this.postMessage({ command: 'locatorCandidates', candidates });
+            this.postMessage({
+                command: 'locatorCandidates',
+                candidates,
+                element: {
+                    tagName: element.tagName,
+                    ariaRole: element.ariaRole,
+                    textContent: element.textContent,
+                    id: element.id,
+                    testId: element.testId,
+                },
+            });
         } catch (err) {
             this.postMessage({
                 command: 'captureStatus',

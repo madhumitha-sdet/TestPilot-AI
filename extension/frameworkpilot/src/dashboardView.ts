@@ -110,135 +110,129 @@ export function getDashboardHtml(): string {
                     background: var(--vscode-button-hoverBackground);
                 }
                 
-                .capture-controls {
-                    max-width: 500px;
+                .capture-toolbar {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    max-width: 700px;
                 }
 
-                .capture-controls label {
-                    display: block;
-                    margin-top: 14px;
-                    margin-bottom: 6px;
-                    font-size: 13px;
-                }
-
-                .capture-controls input {
-                    width: 100%;
-                    box-sizing: border-box;
+                .capture-toolbar input {
+                    flex: 1;
                     padding: 8px;
                     border: 1px solid var(--vscode-input-border);
                     background: var(--vscode-input-background);
                     color: var(--vscode-input-foreground);
                 }
 
-                .capture-buttons {
-                    margin-top: 14px;
-                    display: flex;
-                    gap: 10px;
-                }
-
-                .capture-buttons button {
-                    padding: 8px 18px;
+                .capture-toolbar button {
+                    padding: 8px 16px;
                     background: var(--vscode-button-background);
                     color: var(--vscode-button-foreground);
                     border: none;
                     cursor: pointer;
+                    white-space: nowrap;
                 }
 
-                .capture-buttons button:hover:not(:disabled) {
-                    background: var(--vscode-button-hoverBackground);
-                }
+                .capture-toolbar button:disabled { opacity: 0.5; cursor: default; }
 
-                .capture-buttons button:disabled {
-                    opacity: 0.5;
-                    cursor: default;
+                .status-pill {
+                    padding: 4px 10px;
+                    border-radius: 10px;
+                    font-size: 11px;
+                    white-space: nowrap;
                 }
+                .status-idle, .status-stopped { background: var(--vscode-input-border); }
+                .status-launching, .status-capturing { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+                .status-ready { background: var(--vscode-testing-iconPassed, #4caf50); color: #fff; }
+                .status-error { background: var(--vscode-testing-iconFailed, #f44336); color: #fff; }
 
-                .capture-status {
-                    margin-top: 18px;
-                    padding: 10px 14px;
-                    border-left: 3px solid var(--vscode-input-border);
-                    font-size: 13px;
-                    max-width: 500px;
-                }
+                .capture-results { margin-top: 20px; max-width: 700px; }
 
-                .status-idle {
-                    border-left-color: var(--vscode-input-border);
-                }
-
-                .status-launching, .status-capturing {
-                    border-left-color: var(--vscode-button-background);
-                }
-
-                .status-ready, .status-stopped {
-                    border-left-color: var(--vscode-testing-iconPassed, #4caf50);
-                }
-
-                .status-error {
-                    border-left-color: var(--vscode-testing-iconFailed, #f44336);
-                    color: var(--vscode-errorForeground, inherit);
-                }
-
-                .capture-results {
-                    margin-top: 24px;
-                    max-width: 700px;
-                }
-
-                .candidate-card {
+                .element-card {
                     border: 1px solid var(--vscode-input-border);
-                    padding: 12px 16px;
+                    padding: 14px 16px;
+                    margin-bottom: 14px;
+                }
+
+                .element-header {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 13px;
+                    margin-bottom: 4px;
+                }
+
+                .element-tag {
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    color: var(--vscode-button-background);
+                }
+
+                .element-meta {
+                    font-size: 12px;
+                    color: var(--vscode-descriptionForeground);
                     margin-bottom: 10px;
                 }
 
-                .candidate-card.recommended {
-                    border-color: var(--vscode-button-background);
-                    border-width: 2px;
+                .selected-locator-banner {
+                    font-size: 12px;
+                    margin-bottom: 10px;
+                    padding: 6px 8px;
+                    background: var(--vscode-textCodeBlock-background, rgba(128,128,128,0.15));
                 }
 
-                .candidate-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+                .recommended-block {
+                    border-left: 3px solid var(--vscode-button-background);
+                    padding: 8px 12px;
+                    margin-bottom: 8px;
+                    cursor: pointer;
                 }
 
-                .candidate-type {
+                .recommended-label {
+                    font-size: 11px;
                     font-weight: bold;
-                    text-transform: uppercase;
-                    font-size: 11px;
-                    color: var(--vscode-descriptionForeground);
+                    color: var(--vscode-button-background);
                 }
 
-                .candidate-score {
-                    font-size: 13px;
-                }
-
-                .candidate-badge {
-                    display: inline-block;
-                    margin-left: 8px;
-                    padding: 2px 8px;
-                    font-size: 11px;
-                    background: var(--vscode-button-background);
-                    color: var(--vscode-button-foreground);
-                }
-
-                .candidate-code {
+                .locator-code {
                     display: block;
-                    margin-top: 8px;
+                    margin: 6px 0;
                     padding: 6px 8px;
                     background: var(--vscode-textCodeBlock-background, rgba(128,128,128,0.15));
                     font-family: var(--vscode-editor-font-family, monospace);
                     font-size: 12px;
-                    white-space: pre-wrap;
                     word-break: break-all;
                 }
 
-                .candidate-rationale {
-                    margin-top: 8px;
-                    font-size: 12px;
+                .locator-rationale {
+                    font-size: 11px;
                     color: var(--vscode-descriptionForeground);
                 }
 
-                .candidate-unresolved {
-                    opacity: 0.6;
+                .locator-score { font-size: 11px; color: var(--vscode-descriptionForeground); float: right; }
+
+                .alt-toggle {
+                    font-size: 12px;
+                    cursor: pointer;
+                    color: var(--vscode-textLink-foreground, #3794ff);
+                    margin-top: 4px;
+                }
+
+                .alt-list { display: none; margin-top: 8px; }
+                .alt-list.expanded { display: block; }
+
+                .alt-item {
+                    padding: 6px 12px;
+                    border-left: 3px solid var(--vscode-input-border);
+                    margin-bottom: 6px;
+                    cursor: pointer;
+                }
+
+                .copy-btn {
+                    font-size: 11px;
+                    margin-left: 6px;
+                    cursor: pointer;
+                    color: var(--vscode-textLink-foreground, #3794ff);
                 }
             </style>
         </head>
@@ -365,13 +359,12 @@ export function getDashboardHtml(): string {
                     });
                 }
 
+                let capturedElements = [];
+
                 function startCapture() {
                     const url = document.getElementById('captureUrl').value;
-
                     document.getElementById('startCaptureBtn').disabled = true;
                     document.getElementById('stopCaptureBtn').disabled = false;
-                    document.getElementById('captureResults').innerHTML = '';
-
                     vscode.postMessage({ command: 'startCapture', url: url });
                 }
 
@@ -381,8 +374,9 @@ export function getDashboardHtml(): string {
 
                 function setCaptureStatus(status, message) {
                     const el = document.getElementById('captureStatus');
-                    el.className = 'capture-status status-' + status;
-                    el.textContent = message || status;
+                    el.className = 'status-pill status-' + status;
+                    el.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                    el.title = message || '';
 
                     if (status === 'stopped' || status === 'error') {
                         document.getElementById('startCaptureBtn').disabled = false;
@@ -396,43 +390,87 @@ export function getDashboardHtml(): string {
                     return div.innerHTML;
                 }
 
-                function renderCandidates(candidates) {
+                function elementLabel(element) {
+                    return element.textContent ? '"' + element.textContent.slice(0, 40) + '"' : (element.id || element.ariaRole || 'element');
+                }
+
+                function selectCandidate(entryIndex, candidate) {
+                    capturedElements[entryIndex].selected = candidate;
+                    vscode.postMessage({ command: 'selectLocator', locator: candidate });
+                    renderAll();
+                }
+
+                function toggleAlternatives(cardId) {
+                    const list = document.getElementById(cardId);
+                    list.classList.toggle('expanded');
+                }
+
+                function copyCode(code) {
+                    navigator.clipboard.writeText(code);
+                }
+
+                function renderAll() {
                     const container = document.getElementById('captureResults');
                     container.innerHTML = '';
 
-                    if (!candidates || candidates.length === 0) {
-                        container.innerHTML = '<p>No locator candidates were generated for this element.</p>';
-                        return;
-                    }
+                    capturedElements.forEach(function (entry, index) {
+                        const sorted = entry.candidates.slice().sort(function (a, b) { return b.score - a.score; });
+                        const recommended = sorted.find(function (c) { return c.recommended; }) || sorted[0];
+                        const alternatives = sorted.filter(function (c) { return c !== recommended; });
+                        const selected = entry.selected || recommended;
+                        const altListId = 'alts-' + index;
 
-                    candidates
-                        .slice()
-                        .sort(function (a, b) { return b.score - a.score; })
-                        .forEach(function (candidate) {
-                            const card = document.createElement('div');
-                            card.className = 'candidate-card' + (candidate.recommended ? ' recommended' : '') +
-                                (!candidate.isUnique ? ' candidate-unresolved' : '');
+                        const card = document.createElement('div');
+                        card.className = 'element-card';
 
-                            card.innerHTML =
-                                '<div class="candidate-header">' +
-                                    '<span class="candidate-type">' + escapeHtml(candidate.type) + '</span>' +
-                                    '<span class="candidate-score">Score: ' + escapeHtml(candidate.score) +
-                                        (candidate.recommended ? '<span class="candidate-badge">Recommended</span>' : '') +
-                                    '</span>' +
-                                '</div>' +
-                                '<code class="candidate-code">' + escapeHtml(candidate.code) + '</code>' +
-                                '<div class="candidate-rationale">' + escapeHtml(candidate.rationale) + '</div>';
+                        let html = '';
+                        html += '<div class="element-header"><span class="element-tag">' + escapeHtml(entry.element.tagName) + '</span>' +
+                            '<span>#' + index + '</span></div>';
+                        html += '<div class="element-meta">' + escapeHtml(elementLabel(entry.element)) +
+                            (entry.element.id ? ' &middot; id: ' + escapeHtml(entry.element.id) : '') +
+                            (entry.element.ariaRole ? ' &middot; role: ' + escapeHtml(entry.element.ariaRole) : '') +
+                            (entry.element.testId ? ' &middot; testId: ' + escapeHtml(entry.element.testId) : '') + '</div>';
 
-                            card.onclick = function () {
-                                vscode.postMessage({ command: 'selectLocator', locator: candidate });
-                                document.querySelectorAll('.candidate-card').forEach(function (c) {
-                                    c.style.outline = 'none';
-                                });
-                                card.style.outline = '2px solid var(--vscode-button-background)';
-                            };
+                        if (entry.selected) {
+                            html += '<div class="selected-locator-banner">Selected locator: <code>' + escapeHtml(selected.code) + '</code></div>';
+                        }
 
-                            container.appendChild(card);
+                        html += '<div class="recommended-block" data-idx="' + index + '">' +
+                            '<span class="recommended-label">RECOMMENDED</span>' +
+                            '<span class="locator-score">score ' + escapeHtml(recommended.score) + '</span>' +
+                            '<code class="locator-code">' + escapeHtml(recommended.code) +
+                                '<span class="copy-btn" data-copy="' + index + '">Copy</span></code>' +
+                            '<div class="locator-rationale">' + escapeHtml(recommended.rationale) + '</div>' +
+                            '</div>';
+
+                        if (alternatives.length > 0) {
+                            html += '<div class="alt-toggle" data-toggle="' + altListId + '">▸ ' + alternatives.length + ' other candidate(s)</div>';
+                            html += '<div class="alt-list" id="' + altListId + '">';
+                            alternatives.forEach(function (candidate, altIndex) {
+                                html += '<div class="alt-item" data-idx="' + index + '" data-alt="' + altIndex + '">' +
+                                    '<span class="locator-score">score ' + escapeHtml(candidate.score) + '</span>' +
+                                    '<code class="locator-code">' + escapeHtml(candidate.code) + '</code>' +
+                                    '<div class="locator-rationale">' + escapeHtml(candidate.rationale) + '</div>' +
+                                    '</div>';
+                            });
+                            html += '</div>';
+                        }
+
+                        card.innerHTML = html;
+                        container.appendChild(card);
+
+                        card.querySelector('.recommended-block').onclick = function (e) {
+                            if (e.target.classList.contains('copy-btn')) { copyCode(recommended.code); return; }
+                            selectCandidate(index, recommended);
+                        };
+                        card.querySelectorAll('.alt-item').forEach(function (el) {
+                            el.onclick = function () { selectCandidate(index, alternatives[+el.getAttribute('data-alt')]); };
                         });
+                        const toggle = card.querySelector('.alt-toggle');
+                        if (toggle) {
+                            toggle.onclick = function () { toggleAlternatives(altListId); };
+                        }
+                    });
                 }
 
                 window.addEventListener('message', function (event) {
@@ -441,7 +479,8 @@ export function getDashboardHtml(): string {
                     if (message.command === 'captureStatus') {
                         setCaptureStatus(message.status, message.message);
                     } else if (message.command === 'locatorCandidates') {
-                        renderCandidates(message.candidates);
+                        capturedElements.unshift({ element: message.element, candidates: message.candidates, selected: null });
+                        renderAll();
                     }
                 });
             </script>
