@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { getDashboardHtml } from './dashboardView';
 import { saveAdoConfig, AdoConfigMessage } from './adoConfig';
+import { CaptureController, CaptureStatusMessage, LocatorCandidatesMessage } from './captureController';
+
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -49,16 +51,27 @@ export function activate(context: vscode.ExtensionContext) {
         );
 
         panel.webview.html = getDashboardHtml();
-
+        const captureController = new CaptureController((message: CaptureStatusMessage | LocatorCandidatesMessage) => {
+            panel.webview.postMessage(message);
+        });
         panel.webview.onDidReceiveMessage(
-        async message => {
-        if (message.command === 'saveAdoConfig') {
-            await saveAdoConfig(context, message as AdoConfigMessage);
-        }
-    },
-    undefined,
-    context.subscriptions
-);
+            async message => {
+                if (message.command === 'saveAdoConfig') {
+                    await saveAdoConfig(context, message as AdoConfigMessage);
+                } else if (message.command === 'startCapture') {
+                    await captureController.startCapture(message.url);
+                } else if (message.command === 'stopCapture') {
+                    await captureController.stopCapture();
+                }
+            },
+            undefined,
+            context.subscriptions
+        );
+        panel.onDidDispose(() => {
+            captureController.dispose().catch((err) => {
+                console.error('Failed to dispose capture controller:', err);
+            });
+        });
     }
 );
 

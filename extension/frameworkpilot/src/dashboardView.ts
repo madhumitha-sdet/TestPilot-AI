@@ -109,6 +109,137 @@ export function getDashboardHtml(): string {
                 #adoConfig button:hover {
                     background: var(--vscode-button-hoverBackground);
                 }
+                
+                .capture-controls {
+                    max-width: 500px;
+                }
+
+                .capture-controls label {
+                    display: block;
+                    margin-top: 14px;
+                    margin-bottom: 6px;
+                    font-size: 13px;
+                }
+
+                .capture-controls input {
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 8px;
+                    border: 1px solid var(--vscode-input-border);
+                    background: var(--vscode-input-background);
+                    color: var(--vscode-input-foreground);
+                }
+
+                .capture-buttons {
+                    margin-top: 14px;
+                    display: flex;
+                    gap: 10px;
+                }
+
+                .capture-buttons button {
+                    padding: 8px 18px;
+                    background: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                    border: none;
+                    cursor: pointer;
+                }
+
+                .capture-buttons button:hover:not(:disabled) {
+                    background: var(--vscode-button-hoverBackground);
+                }
+
+                .capture-buttons button:disabled {
+                    opacity: 0.5;
+                    cursor: default;
+                }
+
+                .capture-status {
+                    margin-top: 18px;
+                    padding: 10px 14px;
+                    border-left: 3px solid var(--vscode-input-border);
+                    font-size: 13px;
+                    max-width: 500px;
+                }
+
+                .status-idle {
+                    border-left-color: var(--vscode-input-border);
+                }
+
+                .status-launching, .status-capturing {
+                    border-left-color: var(--vscode-button-background);
+                }
+
+                .status-ready, .status-stopped {
+                    border-left-color: var(--vscode-testing-iconPassed, #4caf50);
+                }
+
+                .status-error {
+                    border-left-color: var(--vscode-testing-iconFailed, #f44336);
+                    color: var(--vscode-errorForeground, inherit);
+                }
+
+                .capture-results {
+                    margin-top: 24px;
+                    max-width: 700px;
+                }
+
+                .candidate-card {
+                    border: 1px solid var(--vscode-input-border);
+                    padding: 12px 16px;
+                    margin-bottom: 10px;
+                }
+
+                .candidate-card.recommended {
+                    border-color: var(--vscode-button-background);
+                    border-width: 2px;
+                }
+
+                .candidate-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .candidate-type {
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    font-size: 11px;
+                    color: var(--vscode-descriptionForeground);
+                }
+
+                .candidate-score {
+                    font-size: 13px;
+                }
+
+                .candidate-badge {
+                    display: inline-block;
+                    margin-left: 8px;
+                    padding: 2px 8px;
+                    font-size: 11px;
+                    background: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                }
+
+                .candidate-code {
+                    display: block;
+                    margin-top: 8px;
+                    padding: 6px 8px;
+                    background: var(--vscode-textCodeBlock-background, rgba(128,128,128,0.15));
+                    font-family: var(--vscode-editor-font-family, monospace);
+                    font-size: 12px;
+                    white-space: pre-wrap;
+                    word-break: break-all;
+                }
+
+                .candidate-rationale {
+                    margin-top: 8px;
+                    font-size: 12px;
+                    color: var(--vscode-descriptionForeground);
+                }
+
+                .candidate-unresolved {
+                    opacity: 0.6;
+                }
             </style>
         </head>
         <body>
@@ -150,8 +281,15 @@ export function getDashboardHtml(): string {
 
                 <div id="captureElements" class="page">
                     <h2>Capture UI Elements</h2>
-                    <p>This module will support capturing locators from the browser.</p>
-                    <p>Coming soon.</p>
+
+                    <div class="capture-toolbar">
+                        <input id="captureUrl" placeholder="https://example.com" />
+                        <button id="startCaptureBtn" onclick="startCapture()">Start Capture</button>
+                        <button id="stopCaptureBtn" onclick="stopCapture()" disabled>Stop Capture</button>
+                        <span id="captureStatus" class="status-pill status-idle">Idle</span>
+                    </div>
+
+                    <div id="captureResults" class="capture-results"></div>
                 </div>
 
                 <div id="updatePom" class="page">
@@ -226,6 +364,86 @@ export function getDashboardHtml(): string {
                         suiteId: suiteId
                     });
                 }
+
+                function startCapture() {
+                    const url = document.getElementById('captureUrl').value;
+
+                    document.getElementById('startCaptureBtn').disabled = true;
+                    document.getElementById('stopCaptureBtn').disabled = false;
+                    document.getElementById('captureResults').innerHTML = '';
+
+                    vscode.postMessage({ command: 'startCapture', url: url });
+                }
+
+                function stopCapture() {
+                    vscode.postMessage({ command: 'stopCapture' });
+                }
+
+                function setCaptureStatus(status, message) {
+                    const el = document.getElementById('captureStatus');
+                    el.className = 'capture-status status-' + status;
+                    el.textContent = message || status;
+
+                    if (status === 'stopped' || status === 'error') {
+                        document.getElementById('startCaptureBtn').disabled = false;
+                        document.getElementById('stopCaptureBtn').disabled = true;
+                    }
+                }
+
+                function escapeHtml(value) {
+                    const div = document.createElement('div');
+                    div.textContent = value == null ? '' : String(value);
+                    return div.innerHTML;
+                }
+
+                function renderCandidates(candidates) {
+                    const container = document.getElementById('captureResults');
+                    container.innerHTML = '';
+
+                    if (!candidates || candidates.length === 0) {
+                        container.innerHTML = '<p>No locator candidates were generated for this element.</p>';
+                        return;
+                    }
+
+                    candidates
+                        .slice()
+                        .sort(function (a, b) { return b.score - a.score; })
+                        .forEach(function (candidate) {
+                            const card = document.createElement('div');
+                            card.className = 'candidate-card' + (candidate.recommended ? ' recommended' : '') +
+                                (!candidate.isUnique ? ' candidate-unresolved' : '');
+
+                            card.innerHTML =
+                                '<div class="candidate-header">' +
+                                    '<span class="candidate-type">' + escapeHtml(candidate.type) + '</span>' +
+                                    '<span class="candidate-score">Score: ' + escapeHtml(candidate.score) +
+                                        (candidate.recommended ? '<span class="candidate-badge">Recommended</span>' : '') +
+                                    '</span>' +
+                                '</div>' +
+                                '<code class="candidate-code">' + escapeHtml(candidate.code) + '</code>' +
+                                '<div class="candidate-rationale">' + escapeHtml(candidate.rationale) + '</div>';
+
+                            card.onclick = function () {
+                                vscode.postMessage({ command: 'selectLocator', locator: candidate });
+                                document.querySelectorAll('.candidate-card').forEach(function (c) {
+                                    c.style.outline = 'none';
+                                });
+                                card.style.outline = '2px solid var(--vscode-button-background)';
+                            };
+
+                            container.appendChild(card);
+                        });
+                }
+
+                window.addEventListener('message', function (event) {
+                    const message = event.data;
+
+                    if (message.command === 'captureStatus') {
+                        setCaptureStatus(message.status, message.message);
+                    } else if (message.command === 'locatorCandidates') {
+                        renderCandidates(message.candidates);
+                    }
+                });
             </script>
 
         </body>

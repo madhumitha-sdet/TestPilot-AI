@@ -5,47 +5,48 @@
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.107.0"
-},
+  },
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "onCommand:frameworkpilot.configureAdo","onCommand:frameworkpilot.openDashboard"
-],
+    "onCommand:frameworkpilot.configureAdo",
+    "onCommand:frameworkpilot.openDashboard"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-        {
-            "command": "frameworkpilot.configureAdo",
-            "title": "FrameworkPilot: Configure Azure DevOps"
-        },
-        {
-            "command": "frameworkpilot.openDashboard",
-            "title": "FrameworkPilot: Open FrameworkPilot"
-    }
+      {
+        "command": "frameworkpilot.configureAdo",
+        "title": "FrameworkPilot: Configure Azure DevOps"
+      },
+      {
+        "command": "frameworkpilot.openDashboard",
+        "title": "FrameworkPilot: Open FrameworkPilot"
+      }
     ],
     "configuration": {
-        "title": "FrameworkPilot",
-        "properties": {
-            "frameworkpilot.ado.organizationUrl": {
-                "type": "string",
-                "description": "Azure DevOps organization URL"
-            },
-            "frameworkpilot.ado.projectName": {
-                "type": "string",
-                "description": "Azure DevOps project name"
-            },
-            "frameworkpilot.ado.planId": {
-                "type": "string",
-                "description": "Azure DevOps Test Plan ID"
-            },
-            "frameworkpilot.ado.suiteId": {
-                "type": "string",
-                "description": "Azure DevOps Test Suite ID"
-            }
+      "title": "FrameworkPilot",
+      "properties": {
+        "frameworkpilot.ado.organizationUrl": {
+          "type": "string",
+          "description": "Azure DevOps organization URL"
+        },
+        "frameworkpilot.ado.projectName": {
+          "type": "string",
+          "description": "Azure DevOps project name"
+        },
+        "frameworkpilot.ado.planId": {
+          "type": "string",
+          "description": "Azure DevOps Test Plan ID"
+        },
+        "frameworkpilot.ado.suiteId": {
+          "type": "string",
+          "description": "Azure DevOps Test Suite ID"
         }
+      }
     }
-},
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -55,17 +56,20 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.125.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
-    "typescript-eslint": "^8.61.1",
+    "@types/vscode": "^1.125.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
     "eslint": "^10.5.0",
     "typescript": "^6.0.3",
-    "@vscode/test-cli": "^0.0.15",
-    "@vscode/test-electron": "^3.0.0"
+    "typescript-eslint": "^8.61.1"
   },
   "overrides": {
     "diff": "^8.0.4",
     "serialize-javascript": "^7.0.6"
+  },
+  "dependencies": {
+    "playwright": "^1.62.1"
   }
 }
