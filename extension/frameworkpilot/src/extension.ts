@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { getDashboardHtml } from './dashboardView';
 import { saveAdoConfig, AdoConfigMessage } from './adoConfig';
+import { saveFrameworkConfig, loadFrameworkConfig, FrameworkConfig } from './frameworkConfig';
 import { CaptureController, CaptureStatusMessage, LocatorCandidatesMessage } from './captureController';
 
 
@@ -62,6 +63,24 @@ export function activate(context: vscode.ExtensionContext) {
                     await captureController.startCapture(message.url);
                 } else if (message.command === 'stopCapture') {
                     await captureController.stopCapture();
+                } else if (message.command === 'setCaptureMode') {
+            await captureController.setMode(message.mode);
+                } else if (message.command === 'saveFrameworkConfig') {
+                    await saveFrameworkConfig(message.config as FrameworkConfig);
+                    panel.webview.postMessage({ command: 'frameworkConfigLoaded', config: loadFrameworkConfig() });
+                } else if (message.command === 'requestFrameworkConfig') {
+                    panel.webview.postMessage({ command: 'frameworkConfigLoaded', config: loadFrameworkConfig() });
+                } else if (message.command === 'pickFile') {
+                    const isFolder = message.field === 'projectPath';
+                    const uris = await vscode.window.showOpenDialog({
+                        canSelectFiles: !isFolder,
+                        canSelectFolders: isFolder,
+                        canSelectMany: false,
+                        openLabel: isFolder ? 'Select Project Folder' : 'Select File',
+                    });
+                    if (uris && uris.length > 0) {
+                        panel.webview.postMessage({ command: 'filePicked', field: message.field, path: uris[0].fsPath });
+                    }
                 }
             },
             undefined,

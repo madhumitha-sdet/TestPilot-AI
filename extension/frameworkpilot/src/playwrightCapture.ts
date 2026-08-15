@@ -17,6 +17,10 @@ function captureScript(): void {
     let previousOutline = '';
     let previousElement: HTMLElement | null = null;
 
+    (window as unknown as { __frameworkPilotMode: string }).__frameworkPilotMode = 'manual';
+    let areaSelectionStart: { x: number; y: number } | null = null;
+    let overlayEl: HTMLDivElement | null = null;
+
     function computeDomPath(el: Element): { tagName: string; nthOfType: number }[] {
         const path: { tagName: string; nthOfType: number }[] = [];
         let node: Element | null = el;
@@ -109,9 +113,53 @@ function captureScript(): void {
         };
     }
 
+    function ensureOverlay(): HTMLDivElement {
+        if (!overlayEl) {
+            overlayEl = document.createElement('div');
+            overlayEl.style.position = 'fixed';
+            overlayEl.style.border = '2px dashed #ff5f5f';
+            overlayEl.style.background = 'rgba(255,95,95,0.15)';
+            overlayEl.style.zIndex = '2147483647';
+            overlayEl.style.pointerEvents = 'none';
+            overlayEl.style.display = 'none';
+            document.body.appendChild(overlayEl);
+        }
+        return overlayEl;
+    }
+
+    function isActionable(el: Element): boolean {
+        const tag = el.tagName.toLowerCase();
+        if (['button', 'a', 'input', 'textarea', 'select'].includes(tag)) {
+            return true;
+        }
+        const role = el.getAttribute('role');
+        const actionableRoles = ['button', 'link', 'checkbox', 'radio', 'combobox', 'textbox', 'menuitem', 'tab', 'switch'];
+        return !!role && actionableRoles.includes(role);
+    }
+
+    function collectElementsInRect(rect: { left: number; top: number; right: number; bottom: number }): Element[] {
+        const candidates = Array.from(document.querySelectorAll('button, a, input, textarea, select, [role]'));
+        const matched = candidates.filter((el) => {
+            if (!isActionable(el)) {
+                return false;
+            }
+            const r = el.getBoundingClientRect();
+            if (r.width === 0 || r.height === 0) {
+                return false;
+            }
+            return !(r.right < rect.left || r.left > rect.right || r.bottom < rect.top || r.top > rect.bottom);
+        });
+        return matched.filter((el) => !matched.some((other) => other !== el && el.contains(other)));
+    }
+
     document.addEventListener(
         'mouseover',
         (event) => {
+            const mode = (window as unknown as { __frameworkPilotMode: string }).__frameworkPilotMode;
+            if (mode === 'area') {
+                return;
+            }
+
             const target = event.target as HTMLElement;
             if (!target || target === previousElement) {
                 return;
@@ -141,6 +189,11 @@ function captureScript(): void {
     document.addEventListener(
         'click',
         (event) => {
+            const mode = (window as unknown as { __frameworkPilotMode: string }).__frameworkPilotMode;
+            if (mode === 'area') {
+                return;
+            }
+
             event.preventDefault();
             event.stopPropagation();
 
@@ -149,6 +202,70 @@ function captureScript(): void {
 
             (window as unknown as { __frameworkPilotElementCaptured: (p: CapturedElementInfo) => void })
                 .__frameworkPilotElementCaptured(payload);
+        },
+        true
+    );
+
+    document.addEventListener(
+        'mousedown',
+        (event) => {
+            const mode = (window as unknown as { __frameworkPilotMode: string }).__frameworkPilotMode;
+            if (mode !== 'area') {
+                return;
+            }
+            event.preventDefault();
+            areaSelectionStart = { x: event.clientX, y: event.clientY };
+            const overlay = ensureOverlay();
+            overlay.style.display = 'block';
+            overlay.style.left = areaSelectionStart.x + 'px';
+            overlay.style.top = areaSelectionStart.y + 'px';
+            overlay.style.width = '0px';
+            overlay.style.height = '0px';
+        },
+        true
+    );
+
+    document.addEventListener(
+        'mousemove',
+        (event) => {
+            if (!areaSelectionStart) {
+                return;
+            }
+            event.preventDefault();
+            const overlay = ensureOverlay();
+            const left = Math.min(areaSelectionStart.x, event.clientX);
+            const top = Math.min(areaSelectionStart.y, event.clientY);
+            overlay.style.left = left + 'px';
+            overlay.style.top = top + 'px';
+            overlay.style.width = Math.abs(event.clientX - areaSelectionStart.x) + 'px';
+            overlay.style.height = Math.abs(event.clientY - areaSelectionStart.y) + 'px';
+        },
+        true
+    );
+
+    document.addEventListener(
+        'mouseup',
+        (event) => {
+            if (!areaSelectionStart) {
+                return;
+            }
+            event.preventDefault();
+
+            const rect = {
+                left: Math.min(areaSelectionStart.x, event.clientX),
+                top: Math.min(areaSelectionStart.y, event.clientY),
+                right: Math.max(areaSelectionStart.x, event.clientX),
+                bottom: Math.max(areaSelectionStart.y, event.clientY),
+            };
+            areaSelectionStart = null;
+            if (overlayEl) {
+                overlayEl.style.display = 'none';
+            }
+
+            const elements = collectElementsInRect(rect).map(buildPayload);
+
+            (window as unknown as { __frameworkPilotAreaCaptured: (els: CapturedElementInfo[]) => void })
+                .__frameworkPilotAreaCaptured(elements);
         },
         true
     );
@@ -168,6 +285,7 @@ export class PlaywrightCaptureSession {
     private context: BrowserContext | null = null;
     private page: Page | null = null;
     private onElementCapturedCallback: ((element: CapturedElementInfo) => void) | null = null;
+    private onAreaCapturedCallback: ((elements: CapturedElementInfo[]) => void) | null = null;
 
     /**
      * Launches Chromium, navigates to the given URL, and starts listening
@@ -189,6 +307,15 @@ export class PlaywrightCaptureSession {
             }
         );
 
+        await this.page.exposeFunction(
+            '__frameworkPilotAreaCaptured',
+            (elements: CapturedElementInfo[]) => {
+                if (this.onAreaCapturedCallback) {
+                    this.onAreaCapturedCallback(elements);
+                }
+            }
+        );
+
         // addInitScript re-runs the capture script on every navigation
         // within this page, not just the first load.
         await this.page.addInitScript(captureScript);
@@ -202,6 +329,19 @@ export class PlaywrightCaptureSession {
      */
     onElementCaptured(callback: (element: CapturedElementInfo) => void): void {
         this.onElementCapturedCallback = callback;
+    }
+
+    onAreaCaptured(callback: (elements: CapturedElementInfo[]) => void): void {
+        this.onAreaCapturedCallback = callback;
+    }
+
+    async setMode(mode: 'manual' | 'area'): Promise<void> {
+        if (!this.page) {
+            return;
+        }
+        await this.page.evaluate((m) => {
+            (window as unknown as { __frameworkPilotMode: string }).__frameworkPilotMode = m;
+        }, mode);
     }
 
     /**

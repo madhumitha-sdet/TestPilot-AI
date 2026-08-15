@@ -43,6 +43,46 @@
         "frameworkpilot.ado.suiteId": {
           "type": "string",
           "description": "Azure DevOps Test Suite ID"
+        },
+        "frameworkpilot.framework.frameworkMode": {
+          "type": "string",
+          "description": "Whether FrameworkPilot uses an existing framework/project or creates a new one"
+        },
+        "frameworkpilot.framework.language": {
+          "type": "string",
+          "description": "Automation language"
+        },
+        "frameworkpilot.framework.automationTool": {
+          "type": "string",
+          "description": "Automation tool"
+        },
+        "frameworkpilot.framework.testRunner": {
+          "type": "string",
+          "description": "Test runner"
+        },
+        "frameworkpilot.framework.architecture": {
+          "type": "string",
+          "description": "Automation architecture"
+        },
+        "frameworkpilot.framework.testDataApproach": {
+          "type": "string",
+          "description": "Test data approach"
+        },
+        "frameworkpilot.framework.projectPath": {
+          "type": "string",
+          "description": "Path to the automation project"
+        },
+        "frameworkpilot.framework.testCaseFile": {
+          "type": "string",
+          "description": "Path to a test case file"
+        },
+        "frameworkpilot.framework.existingPomFile": {
+          "type": "string",
+          "description": "Path to an existing Page Object file"
+        },
+        "frameworkpilot.framework.existingTestFile": {
+          "type": "string",
+          "description": "Path to an existing test file"
         }
       }
     }

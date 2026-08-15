@@ -1,7 +1,7 @@
 import { PlaywrightCaptureSession } from './playwrightCapture';
 import { buildLocatorCandidates, CapturedElementInfo, LocatorCandidate } from './locatorEngine';
 
-export type CaptureStatus = 'launching' | 'ready' | 'capturing' | 'stopped' | 'error';
+export type CaptureStatus = 'launching' | 'ready' | 'capturing' | 'stopped' | 'error' | 'area-select';
 
 export interface CaptureStatusMessage {
     command: 'captureStatus';
@@ -43,6 +43,7 @@ export class CaptureController {
         this.postMessage = postMessage;
         this.session = new PlaywrightCaptureSession();
         this.session.onElementCaptured((element) => this.handleElementCaptured(element));
+        this.session.onAreaCaptured((elements) => this.handleAreaCaptured(elements));
     }
 
     /**
@@ -89,13 +90,28 @@ export class CaptureController {
      * Playwright's event pipeline.
      */
     private async handleElementCaptured(element: CapturedElementInfo): Promise<void> {
-        try {
-            this.postMessage({
-                command: 'captureStatus',
-                status: 'capturing',
-                message: 'Element captured. Scoring locator candidates...',
-            });
+        this.postMessage({
+            command: 'captureStatus',
+            status: 'capturing',
+            message: 'Element captured. Scoring locator candidates...',
+        });
+        await this.buildAndSendCandidates(element);
+    }
 
+    private async handleAreaCaptured(elements: CapturedElementInfo[]): Promise<void> {
+        this.postMessage({
+            command: 'captureStatus',
+            status: 'capturing',
+            message: `${elements.length} element(s) captured. Scoring locator candidates...`,
+        });
+
+        for (const element of elements) {
+            await this.buildAndSendCandidates(element);
+        }
+    }
+
+    private async buildAndSendCandidates(element: CapturedElementInfo): Promise<void> {
+        try {
             const candidates = await buildLocatorCandidates(element, this.session.getUniquenessChecker());
 
             this.postMessage({
@@ -116,6 +132,17 @@ export class CaptureController {
                 message: `Failed to process captured element: ${this.describeError(err)}`,
             });
         }
+    }
+
+    async setMode(mode: 'manual' | 'area'): Promise<void> {
+        await this.session.setMode(mode);
+        this.postMessage({
+            command: 'captureStatus',
+            status: mode === 'area' ? 'area-select' : 'ready',
+            message: mode === 'area'
+                ? 'Drag a rectangle around elements in the browser to capture them.'
+                : 'Click any element in the browser to capture it.',
+        });
     }
 
     /**

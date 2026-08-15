@@ -81,6 +81,69 @@ export function getDashboardHtml(): string {
                     line-height: 1.5;
                 }
 
+                .fw-config-form {
+                    max-width: 500px;
+                }
+
+                .fw-config-form label {
+                    display: block;
+                    margin-top: 14px;
+                    margin-bottom: 6px;
+                    font-size: 13px;
+                }
+
+                .fw-config-form select,
+                .fw-config-form input {
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 8px;
+                    border: 1px solid var(--vscode-input-border);
+                    background: var(--vscode-input-background);
+                    color: var(--vscode-input-foreground);
+                }
+
+                .fw-path-row {
+                    display: flex;
+                    gap: 8px;
+                }
+
+                .fw-path-row input { flex: 1; }
+
+                .fw-path-row button {
+                    padding: 8px 12px;
+                    background: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
+                    color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+                    border: none;
+                    cursor: pointer;
+                    white-space: nowrap;
+                }
+
+                .fw-save-btn {
+                    margin-top: 20px;
+                    padding: 8px 18px;
+                    background: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                    border: none;
+                    cursor: pointer;
+                }
+
+                .fw-save-btn:hover {
+                    background: var(--vscode-button-hoverBackground);
+                }
+
+                .fw-saved-summary {
+                    margin-top: 24px;
+                    max-width: 500px;
+                    padding: 12px 16px;
+                    border: 1px solid var(--vscode-input-border);
+                    font-size: 12px;
+                    line-height: 1.6;
+                }
+
+                .fw-saved-summary .fw-summary-label {
+                    color: var(--vscode-descriptionForeground);
+                }
+
                 #adoConfig label {
                 display: block;
                 margin-top: 14px;
@@ -147,56 +210,116 @@ export function getDashboardHtml(): string {
                 .status-ready { background: var(--vscode-testing-iconPassed, #4caf50); color: #fff; }
                 .status-error { background: var(--vscode-testing-iconFailed, #f44336); color: #fff; }
 
-                .capture-results { margin-top: 20px; max-width: 700px; }
-
-                .element-card {
-                    border: 1px solid var(--vscode-input-border);
-                    padding: 14px 16px;
-                    margin-bottom: 14px;
-                }
-
-                .element-header {
+                .capture-mode-row {
                     display: flex;
-                    justify-content: space-between;
-                    font-size: 13px;
-                    margin-bottom: 4px;
+                    align-items: center;
+                    gap: 8px;
+                    margin-top: 12px;
                 }
 
-                .element-tag {
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    color: var(--vscode-button-background);
-                }
-
-                .element-meta {
+                .mode-label {
                     font-size: 12px;
                     color: var(--vscode-descriptionForeground);
-                    margin-bottom: 10px;
                 }
 
-                .selected-locator-banner {
+                .mode-btn {
+                    padding: 5px 12px;
                     font-size: 12px;
-                    margin-bottom: 10px;
-                    padding: 6px 8px;
-                    background: var(--vscode-textCodeBlock-background, rgba(128,128,128,0.15));
-                }
-
-                .recommended-block {
-                    border-left: 3px solid var(--vscode-button-background);
-                    padding: 8px 12px;
-                    margin-bottom: 8px;
+                    background: none;
+                    border: 1px solid var(--vscode-input-border);
+                    color: var(--vscode-foreground);
                     cursor: pointer;
                 }
 
-                .recommended-label {
-                    font-size: 11px;
-                    font-weight: bold;
-                    color: var(--vscode-button-background);
+                .mode-btn:disabled { opacity: 0.5; cursor: default; }
+
+                .mode-btn.active {
+                    background: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                    border-color: var(--vscode-button-background);
                 }
 
-                .locator-code {
+                .capture-table-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 20px;
+                    max-width: 900px;
+                    font-size: 13px;
+                }
+
+                .clear-all-btn {
+                    padding: 4px 10px;
+                    font-size: 12px;
+                    background: none;
+                    border: 1px solid var(--vscode-input-border);
+                    color: var(--vscode-foreground);
+                    cursor: pointer;
+                }
+
+                .capture-table {
+                    width: 100%;
+                    max-width: 900px;
+                    margin-top: 8px;
+                    border-collapse: collapse;
+                    font-size: 12px;
+                }
+
+                .capture-table th {
+                    text-align: left;
+                    padding: 6px 8px;
+                    border-bottom: 1px solid var(--vscode-input-border);
+                    color: var(--vscode-descriptionForeground);
+                    font-weight: normal;
+                }
+
+                .capture-table td {
+                    padding: 6px 8px;
+                    border-bottom: 1px solid var(--vscode-input-border);
+                    vertical-align: middle;
+                }
+
+                .capture-table tbody tr.data-row { cursor: pointer; }
+                .capture-table tbody tr.data-row:hover { background: var(--vscode-list-hoverBackground); }
+
+                .col-num, .col-type, .col-score, .col-select { white-space: nowrap; }
+
+                .row-locator-code {
+                    display: inline-block;
+                    max-width: 260px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    vertical-align: middle;
+                    font-family: var(--vscode-editor-font-family, monospace);
+                }
+
+                .recommended-tag {
+                    font-size: 10px;
+                    margin-left: 6px;
+                    padding: 1px 6px;
+                    background: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                }
+
+                .detail-row td {
+                    background: var(--vscode-editor-background);
+                    border-bottom: 1px solid var(--vscode-input-border);
+                    padding: 12px 16px;
+                }
+
+                .detail-section-label {
+                    font-size: 11px;
+                    font-weight: bold;
+                    color: var(--vscode-descriptionForeground);
+                    margin-top: 8px;
+                }
+
+                .detail-section-label:first-child { margin-top: 0; }
+
+                .detail-code {
                     display: block;
-                    margin: 6px 0;
+                    margin: 4px 0;
                     padding: 6px 8px;
                     background: var(--vscode-textCodeBlock-background, rgba(128,128,128,0.15));
                     font-family: var(--vscode-editor-font-family, monospace);
@@ -204,35 +327,23 @@ export function getDashboardHtml(): string {
                     word-break: break-all;
                 }
 
-                .locator-rationale {
+                .detail-rationale {
                     font-size: 11px;
                     color: var(--vscode-descriptionForeground);
                 }
 
-                .locator-score { font-size: 11px; color: var(--vscode-descriptionForeground); float: right; }
-
-                .alt-toggle {
-                    font-size: 12px;
-                    cursor: pointer;
-                    color: var(--vscode-textLink-foreground, #3794ff);
-                    margin-top: 4px;
-                }
-
-                .alt-list { display: none; margin-top: 8px; }
-                .alt-list.expanded { display: block; }
-
-                .alt-item {
-                    padding: 6px 12px;
-                    border-left: 3px solid var(--vscode-input-border);
-                    margin-bottom: 6px;
-                    cursor: pointer;
-                }
-
                 .copy-btn {
                     font-size: 11px;
-                    margin-left: 6px;
+                    margin-left: 8px;
                     cursor: pointer;
                     color: var(--vscode-textLink-foreground, #3794ff);
+                }
+
+                .alt-item {
+                    padding: 4px 10px;
+                    border-left: 3px solid var(--vscode-input-border);
+                    margin-top: 6px;
+                    cursor: pointer;
                 }
             </style>
         </head>
@@ -241,6 +352,7 @@ export function getDashboardHtml(): string {
             <div class="sidebar">
                 <h1>FrameworkPilot</h1>
                 <button class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">Dashboard</button>
+                <button class="nav-item" data-page="frameworkConfig" onclick="showPage('frameworkConfig')">Framework Configuration</button>
                 <button class="nav-item" data-page="importAdo" onclick="showPage('importAdo')">Import from ADO</button>
                 <button class="nav-item" data-page="testCases" onclick="showPage('testCases')">Test Cases</button>
                 <button class="nav-item" data-page="generateScripts" onclick="showPage('generateScripts')">Generate Test Scripts</button>
@@ -253,6 +365,72 @@ export function getDashboardHtml(): string {
                 <div id="dashboard" class="page active">
                     <h2>Dashboard</h2>
                     <p>Welcome to FrameworkPilot. Use the navigation on the left to import test cases, generate automation scripts, and manage your framework.</p>
+                </div>
+
+                <div id="frameworkConfig" class="page">
+                    <h2>Framework Configuration</h2>
+                    <p>Define how FrameworkPilot should work with your automation project. This does not generate or modify any code yet.</p>
+
+                    <div class="fw-config-form">
+                        <label>Framework Source</label>
+                        <select id="fwMode">
+                            <option value="existing">Use an existing framework/project</option>
+                            <option value="new">Create a new framework</option>
+                        </select>
+
+                        <label>Language</label>
+                        <select id="fwLanguage">
+                            <option value="python">Python</option>
+                        </select>
+
+                        <label>Automation Tool</label>
+                        <select id="fwAutomationTool">
+                            <option value="playwright">Playwright</option>
+                        </select>
+
+                        <label>Test Runner</label>
+                        <select id="fwTestRunner">
+                            <option value="pytest">Pytest</option>
+                        </select>
+
+                        <label>Architecture</label>
+                        <select id="fwArchitecture">
+                            <option value="page_object_model">Page Object Model</option>
+                        </select>
+
+                        <label>Test Data Approach</label>
+                        <select id="fwTestDataApproach">
+                            <option value="json">JSON</option>
+                        </select>
+
+                        <label>Project Path (optional)</label>
+                        <div class="fw-path-row">
+                            <input id="fwProjectPath" placeholder="Path to your automation project folder" />
+                            <button onclick="pickPath('projectPath')">Browse...</button>
+                        </div>
+
+                        <label>Test Case File (optional)</label>
+                        <div class="fw-path-row">
+                            <input id="fwTestCaseFile" placeholder="Path to a test case file (e.g. login_test_case.md)" />
+                            <button onclick="pickPath('testCaseFile')">Browse...</button>
+                        </div>
+
+                        <label>Existing POM File (optional)</label>
+                        <div class="fw-path-row">
+                            <input id="fwExistingPomFile" placeholder="Path to an existing Page Object file" />
+                            <button onclick="pickPath('existingPomFile')">Browse...</button>
+                        </div>
+
+                        <label>Existing Test File (optional)</label>
+                        <div class="fw-path-row">
+                            <input id="fwExistingTestFile" placeholder="Path to an existing test file" />
+                            <button onclick="pickPath('existingTestFile')">Browse...</button>
+                        </div>
+
+                        <button class="fw-save-btn" onclick="saveFrameworkConfiguration()">Save Configuration</button>
+                    </div>
+
+                    <div id="fwSavedSummary" class="fw-saved-summary"></div>
                 </div>
 
                 <div id="importAdo" class="page">
@@ -283,7 +461,30 @@ export function getDashboardHtml(): string {
                         <span id="captureStatus" class="status-pill status-idle">Idle</span>
                     </div>
 
-                    <div id="captureResults" class="capture-results"></div>
+                    <div class="capture-mode-row">
+                        <span class="mode-label">Capture Mode:</span>
+                        <button id="manualModeBtn" class="mode-btn active" onclick="setCaptureMode('manual')" disabled>Manual Capture</button>
+                        <button id="areaModeBtn" class="mode-btn" onclick="setCaptureMode('area')" disabled>Select Area</button>
+                    </div>
+
+                    <div class="capture-table-header">
+                        <span id="capturedCount">Captured Elements (0)</span>
+                        <button class="clear-all-btn" onclick="clearAllCaptured()">Clear All</button>
+                    </div>
+
+                    <table class="capture-table">
+                        <thead>
+                            <tr>
+                                <th class="col-num">#</th>
+                                <th>Element</th>
+                                <th>Locator</th>
+                                <th class="col-type">Type</th>
+                                <th class="col-score">Score</th>
+                                <th class="col-select">Select</th>
+                            </tr>
+                        </thead>
+                        <tbody id="captureTableBody"></tbody>
+                    </table>
                 </div>
 
                 <div id="updatePom" class="page">
@@ -336,6 +537,10 @@ export function getDashboardHtml(): string {
 
                     document.getElementById(pageId).classList.add('active');
                     document.querySelector('[data-page="' + pageId + '"]').classList.add('active');
+
+                    if (pageId === 'frameworkConfig') {
+                        vscode.postMessage({ command: 'requestFrameworkConfig' });
+                    }
                 }
 
                 function showSettingsSection(sectionId) {
@@ -359,7 +564,53 @@ export function getDashboardHtml(): string {
                     });
                 }
 
+                function pickPath(field) {
+                    vscode.postMessage({ command: 'pickFile', field: field });
+                }
+
+                function saveFrameworkConfiguration() {
+                    const config = {
+                        frameworkMode: document.getElementById('fwMode').value,
+                        language: document.getElementById('fwLanguage').value,
+                        automationTool: document.getElementById('fwAutomationTool').value,
+                        testRunner: document.getElementById('fwTestRunner').value,
+                        architecture: document.getElementById('fwArchitecture').value,
+                        testDataApproach: document.getElementById('fwTestDataApproach').value,
+                        projectPath: document.getElementById('fwProjectPath').value,
+                        testCaseFile: document.getElementById('fwTestCaseFile').value,
+                        existingPomFile: document.getElementById('fwExistingPomFile').value,
+                        existingTestFile: document.getElementById('fwExistingTestFile').value
+                    };
+
+                    vscode.postMessage({ command: 'saveFrameworkConfig', config: config });
+                }
+
+                function renderFrameworkConfig(config) {
+                    document.getElementById('fwMode').value = config.frameworkMode;
+                    document.getElementById('fwLanguage').value = config.language;
+                    document.getElementById('fwAutomationTool').value = config.automationTool;
+                    document.getElementById('fwTestRunner').value = config.testRunner;
+                    document.getElementById('fwArchitecture').value = config.architecture;
+                    document.getElementById('fwTestDataApproach').value = config.testDataApproach;
+                    document.getElementById('fwProjectPath').value = config.projectPath || '';
+                    document.getElementById('fwTestCaseFile').value = config.testCaseFile || '';
+                    document.getElementById('fwExistingPomFile').value = config.existingPomFile || '';
+                    document.getElementById('fwExistingTestFile').value = config.existingTestFile || '';
+
+                    const summary = document.getElementById('fwSavedSummary');
+                    summary.innerHTML =
+                        '<div><span class="fw-summary-label">Mode:</span> ' + escapeHtml(config.frameworkMode) + '</div>' +
+                        '<div><span class="fw-summary-label">Stack:</span> ' + escapeHtml(config.language) + ' / ' + escapeHtml(config.automationTool) + ' / ' + escapeHtml(config.testRunner) + ' / ' + escapeHtml(config.architecture) + '</div>' +
+                        '<div><span class="fw-summary-label">Test Data:</span> ' + escapeHtml(config.testDataApproach) + '</div>' +
+                        '<div><span class="fw-summary-label">Project Path:</span> ' + escapeHtml(config.projectPath || 'Not set') + '</div>' +
+                        '<div><span class="fw-summary-label">Test Case File:</span> ' + escapeHtml(config.testCaseFile || 'Not set') + '</div>' +
+                        '<div><span class="fw-summary-label">Existing POM File:</span> ' + escapeHtml(config.existingPomFile || 'Not set') + '</div>' +
+                        '<div><span class="fw-summary-label">Existing Test File:</span> ' + escapeHtml(config.existingTestFile || 'Not set') + '</div>';
+                }
+
                 let capturedElements = [];
+                let captureReady = false;
+                let currentMode = 'manual';
 
                 function startCapture() {
                     const url = document.getElementById('captureUrl').value;
@@ -370,6 +621,22 @@ export function getDashboardHtml(): string {
 
                 function stopCapture() {
                     vscode.postMessage({ command: 'stopCapture' });
+                    captureReady = false;
+                    document.getElementById('manualModeBtn').disabled = true;
+                    document.getElementById('areaModeBtn').disabled = true;
+                }
+
+                function setCaptureMode(mode) {
+                    if (!captureReady) { return; }
+                    currentMode = mode;
+                    document.getElementById('manualModeBtn').classList.toggle('active', mode === 'manual');
+                    document.getElementById('areaModeBtn').classList.toggle('active', mode === 'area');
+                    vscode.postMessage({ command: 'setCaptureMode', mode: mode });
+                }
+
+                function clearAllCaptured() {
+                    capturedElements = [];
+                    renderTable();
                 }
 
                 function setCaptureStatus(status, message) {
@@ -378,9 +645,17 @@ export function getDashboardHtml(): string {
                     el.textContent = status.charAt(0).toUpperCase() + status.slice(1);
                     el.title = message || '';
 
+                    if (status === 'ready') {
+                        captureReady = true;
+                        document.getElementById('manualModeBtn').disabled = false;
+                        document.getElementById('areaModeBtn').disabled = false;
+                    }
+
                     if (status === 'stopped' || status === 'error') {
                         document.getElementById('startCaptureBtn').disabled = false;
                         document.getElementById('stopCaptureBtn').disabled = true;
+                        document.getElementById('manualModeBtn').disabled = true;
+                        document.getElementById('areaModeBtn').disabled = true;
                     }
                 }
 
@@ -391,84 +666,83 @@ export function getDashboardHtml(): string {
                 }
 
                 function elementLabel(element) {
-                    return element.textContent ? '"' + element.textContent.slice(0, 40) + '"' : (element.id || element.ariaRole || 'element');
+                    return element.textContent ? element.textContent.slice(0, 40) : (element.id || element.ariaRole || element.tagName);
                 }
 
                 function selectCandidate(entryIndex, candidate) {
                     capturedElements[entryIndex].selected = candidate;
                     vscode.postMessage({ command: 'selectLocator', locator: candidate });
-                    renderAll();
-                }
-
-                function toggleAlternatives(cardId) {
-                    const list = document.getElementById(cardId);
-                    list.classList.toggle('expanded');
+                    renderTable();
                 }
 
                 function copyCode(code) {
                     navigator.clipboard.writeText(code);
                 }
 
-                function renderAll() {
-                    const container = document.getElementById('captureResults');
-                    container.innerHTML = '';
+                function toggleExpand(index) {
+                    capturedElements[index].expanded = !capturedElements[index].expanded;
+                    renderTable();
+                }
+
+                function renderTable() {
+                    document.getElementById('capturedCount').textContent = 'Captured Elements (' + capturedElements.length + ')';
+                    const tbody = document.getElementById('captureTableBody');
+                    tbody.innerHTML = '';
 
                     capturedElements.forEach(function (entry, index) {
                         const sorted = entry.candidates.slice().sort(function (a, b) { return b.score - a.score; });
                         const recommended = sorted.find(function (c) { return c.recommended; }) || sorted[0];
                         const alternatives = sorted.filter(function (c) { return c !== recommended; });
-                        const selected = entry.selected || recommended;
-                        const altListId = 'alts-' + index;
+                        const active = entry.selected || recommended;
 
-                        const card = document.createElement('div');
-                        card.className = 'element-card';
+                        const row = document.createElement('tr');
+                        row.className = 'data-row';
+                        row.innerHTML =
+                            '<td class="col-num">' + index + '</td>' +
+                            '<td>' + escapeHtml(elementLabel(entry.element)) + '</td>' +
+                            '<td><span class="row-locator-code">' + escapeHtml(active.code) + '</span>' +
+                                (active === recommended ? '<span class="recommended-tag">Recommended</span>' : '') + '</td>' +
+                            '<td class="col-type">' + escapeHtml(active.type) + '</td>' +
+                            '<td class="col-score">' + escapeHtml(active.score) + '</td>' +
+                            '<td class="col-select"><input type="checkbox" checked disabled /></td>';
+                        row.onclick = function () { toggleExpand(index); };
+                        tbody.appendChild(row);
 
-                        let html = '';
-                        html += '<div class="element-header"><span class="element-tag">' + escapeHtml(entry.element.tagName) + '</span>' +
-                            '<span>#' + index + '</span></div>';
-                        html += '<div class="element-meta">' + escapeHtml(elementLabel(entry.element)) +
-                            (entry.element.id ? ' &middot; id: ' + escapeHtml(entry.element.id) : '') +
-                            (entry.element.ariaRole ? ' &middot; role: ' + escapeHtml(entry.element.ariaRole) : '') +
-                            (entry.element.testId ? ' &middot; testId: ' + escapeHtml(entry.element.testId) : '') + '</div>';
+                        if (entry.expanded) {
+                            const detailRow = document.createElement('tr');
+                            detailRow.className = 'detail-row';
 
-                        if (entry.selected) {
-                            html += '<div class="selected-locator-banner">Selected locator: <code>' + escapeHtml(selected.code) + '</code></div>';
-                        }
+                            let html = '<td colspan="6">';
+                            html += '<div class="detail-section-label">RECOMMENDED LOCATOR</div>';
+                            html += '<code class="detail-code">' + escapeHtml(recommended.code) +
+                                '<span class="copy-btn" data-copy-recommended="' + index + '">Copy</span></code>';
+                            html += '<div class="detail-rationale">' + escapeHtml(recommended.rationale) + '</div>';
 
-                        html += '<div class="recommended-block" data-idx="' + index + '">' +
-                            '<span class="recommended-label">RECOMMENDED</span>' +
-                            '<span class="locator-score">score ' + escapeHtml(recommended.score) + '</span>' +
-                            '<code class="locator-code">' + escapeHtml(recommended.code) +
-                                '<span class="copy-btn" data-copy="' + index + '">Copy</span></code>' +
-                            '<div class="locator-rationale">' + escapeHtml(recommended.rationale) + '</div>' +
-                            '</div>';
+                            if (alternatives.length > 0) {
+                                html += '<div class="detail-section-label">ALTERNATIVE CANDIDATES</div>';
+                                alternatives.forEach(function (candidate, altIndex) {
+                                    html += '<div class="alt-item" data-idx="' + index + '" data-alt="' + altIndex + '">' +
+                                        escapeHtml(candidate.type) + ' &middot; score ' + escapeHtml(candidate.score) +
+                                        '<code class="detail-code">' + escapeHtml(candidate.code) + '</code>' +
+                                        '<div class="detail-rationale">' + escapeHtml(candidate.rationale) + '</div>' +
+                                        '</div>';
+                                });
+                            }
 
-                        if (alternatives.length > 0) {
-                            html += '<div class="alt-toggle" data-toggle="' + altListId + '">▸ ' + alternatives.length + ' other candidate(s)</div>';
-                            html += '<div class="alt-list" id="' + altListId + '">';
-                            alternatives.forEach(function (candidate, altIndex) {
-                                html += '<div class="alt-item" data-idx="' + index + '" data-alt="' + altIndex + '">' +
-                                    '<span class="locator-score">score ' + escapeHtml(candidate.score) + '</span>' +
-                                    '<code class="locator-code">' + escapeHtml(candidate.code) + '</code>' +
-                                    '<div class="locator-rationale">' + escapeHtml(candidate.rationale) + '</div>' +
-                                    '</div>';
+                            html += '</td>';
+                            detailRow.innerHTML = html;
+                            tbody.appendChild(detailRow);
+
+                            detailRow.querySelector('[data-copy-recommended]').onclick = function (e) {
+                                e.stopPropagation();
+                                copyCode(recommended.code);
+                            };
+                            detailRow.querySelectorAll('.alt-item').forEach(function (el) {
+                                el.onclick = function (e) {
+                                    e.stopPropagation();
+                                    selectCandidate(index, alternatives[+el.getAttribute('data-alt')]);
+                                };
                             });
-                            html += '</div>';
-                        }
-
-                        card.innerHTML = html;
-                        container.appendChild(card);
-
-                        card.querySelector('.recommended-block').onclick = function (e) {
-                            if (e.target.classList.contains('copy-btn')) { copyCode(recommended.code); return; }
-                            selectCandidate(index, recommended);
-                        };
-                        card.querySelectorAll('.alt-item').forEach(function (el) {
-                            el.onclick = function () { selectCandidate(index, alternatives[+el.getAttribute('data-alt')]); };
-                        });
-                        const toggle = card.querySelector('.alt-toggle');
-                        if (toggle) {
-                            toggle.onclick = function () { toggleAlternatives(altListId); };
                         }
                     });
                 }
@@ -479,8 +753,21 @@ export function getDashboardHtml(): string {
                     if (message.command === 'captureStatus') {
                         setCaptureStatus(message.status, message.message);
                     } else if (message.command === 'locatorCandidates') {
-                        capturedElements.unshift({ element: message.element, candidates: message.candidates, selected: null });
-                        renderAll();
+                        capturedElements.unshift({ element: message.element, candidates: message.candidates, selected: null, expanded: false });
+                        renderTable();
+                    } else if (message.command === 'frameworkConfigLoaded') {
+                        renderFrameworkConfig(message.config);
+                    } else if (message.command === 'filePicked') {
+                        const fieldToInputId = {
+                            projectPath: 'fwProjectPath',
+                            testCaseFile: 'fwTestCaseFile',
+                            existingPomFile: 'fwExistingPomFile',
+                            existingTestFile: 'fwExistingTestFile'
+                        };
+                        const inputId = fieldToInputId[message.field];
+                        if (inputId) {
+                            document.getElementById(inputId).value = message.path;
+                        }
                     }
                 });
             </script>
