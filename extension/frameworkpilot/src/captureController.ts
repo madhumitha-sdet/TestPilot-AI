@@ -44,6 +44,13 @@ export class CaptureController {
         this.session = new PlaywrightCaptureSession();
         this.session.onElementCaptured((element) => this.handleElementCaptured(element));
         this.session.onAreaCaptured((elements) => this.handleAreaCaptured(elements));
+        this.session.onCaptureError((message) => {
+            this.postMessage({
+                command: 'captureStatus',
+                status: 'error',
+                message: `Capture failed for the clicked element: ${message}`,
+            });
+        });
     }
 
     /**
@@ -51,6 +58,15 @@ export class CaptureController {
      * session at a time) a capture session at the given URL.
      */
     async startCapture(url: string): Promise<void> {
+        if (this.session.isActive()) {
+            this.postMessage({
+                command: 'captureStatus',
+                status: 'ready',
+                message: 'Capture session already active. Reusing the existing browser — interact normally, elements are captured automatically.',
+            });
+            return;
+        }
+
         const trimmedUrl = (url || '').trim();
         if (!trimmedUrl) {
             this.postMessage({ command: 'captureStatus', status: 'error', message: 'Application URL is required.' });
@@ -69,7 +85,7 @@ export class CaptureController {
             this.postMessage({
                 command: 'captureStatus',
                 status: 'ready',
-                message: 'Browser launched. Click any element in the browser window to capture it.',
+                message: 'Browser launched. Interact with the application normally — clicks and inputs are captured automatically.',
             });
         } catch (err) {
             this.postMessage({

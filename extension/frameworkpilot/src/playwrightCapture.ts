@@ -194,14 +194,19 @@ function captureScript(): void {
                 return;
             }
 
-            event.preventDefault();
-            event.stopPropagation();
+            // Observational only: capture the element info but let the
+            // browser's normal click behavior (navigation, submit, focus,
+            // etc.) proceed. Capture must never block real interaction.
+            try {
+                const target = event.target as Element;
+                const payload = buildPayload(target);
 
-            const target = event.target as Element;
-            const payload = buildPayload(target);
-
-            (window as unknown as { __frameworkPilotElementCaptured: (p: CapturedElementInfo) => void })
-                .__frameworkPilotElementCaptured(payload);
+                (window as unknown as { __frameworkPilotElementCaptured: (p: CapturedElementInfo) => void })
+                    .__frameworkPilotElementCaptured(payload);
+            } catch (err) {
+                (window as unknown as { __frameworkPilotCaptureError: (message: string) => void })
+                    .__frameworkPilotCaptureError(err instanceof Error ? err.message : String(err));
+            }
         },
         true
     );
@@ -286,6 +291,7 @@ export class PlaywrightCaptureSession {
     private page: Page | null = null;
     private onElementCapturedCallback: ((element: CapturedElementInfo) => void) | null = null;
     private onAreaCapturedCallback: ((elements: CapturedElementInfo[]) => void) | null = null;
+    private onCaptureErrorCallback: ((message: string) => void) | null = null;
 
     /**
      * Launches Chromium, navigates to the given URL, and starts listening
@@ -316,6 +322,15 @@ export class PlaywrightCaptureSession {
             }
         );
 
+        await this.page.exposeFunction(
+            '__frameworkPilotCaptureError',
+            (message: string) => {
+                if (this.onCaptureErrorCallback) {
+                    this.onCaptureErrorCallback(message);
+                }
+            }
+        );
+
         // addInitScript re-runs the capture script on every navigation
         // within this page, not just the first load.
         await this.page.addInitScript(captureScript);
@@ -333,6 +348,10 @@ export class PlaywrightCaptureSession {
 
     onAreaCaptured(callback: (elements: CapturedElementInfo[]) => void): void {
         this.onAreaCapturedCallback = callback;
+    }
+
+    onCaptureError(callback: (message: string) => void): void {
+        this.onCaptureErrorCallback = callback;
     }
 
     async setMode(mode: 'manual' | 'area'): Promise<void> {

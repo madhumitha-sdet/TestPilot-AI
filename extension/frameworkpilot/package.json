@@ -83,6 +83,10 @@
         "frameworkpilot.framework.existingTestFile": {
           "type": "string",
           "description": "Path to an existing test file"
+        },
+        "frameworkpilot.framework.testCaseExcelPath": {
+          "type": "string",
+          "description": "Path to an Excel workbook containing test cases (one sheet per test case)"
         }
       }
     }
@@ -110,6 +114,7 @@
     "serialize-javascript": "^7.0.6"
   },
   "dependencies": {
-    "playwright": "^1.62.1"
+    "playwright": "^1.62.1",
+    "xlsx": "^0.18.5"
   }
 }

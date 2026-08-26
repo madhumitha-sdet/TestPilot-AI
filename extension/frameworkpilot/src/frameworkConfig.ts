@@ -27,6 +27,7 @@ export interface FrameworkConfig {
     testCaseFile?: string;
     existingPomFile?: string;
     existingTestFile?: string;
+    testCaseExcelPath?: string;
 }
 
 const DEFAULT_CONFIG: FrameworkConfig = {
@@ -51,6 +52,7 @@ export async function saveFrameworkConfig(config: FrameworkConfig): Promise<void
     await target.update('testCaseFile', config.testCaseFile || '', vscode.ConfigurationTarget.Global);
     await target.update('existingPomFile', config.existingPomFile || '', vscode.ConfigurationTarget.Global);
     await target.update('existingTestFile', config.existingTestFile || '', vscode.ConfigurationTarget.Global);
+    await target.update('testCaseExcelPath', config.testCaseExcelPath || '', vscode.ConfigurationTarget.Global);
 
     vscode.window.showInformationMessage('Framework configuration saved.');
 }
@@ -69,5 +71,6 @@ export function loadFrameworkConfig(): FrameworkConfig {
         testCaseFile: source.get<string>('testCaseFile', '') || undefined,
         existingPomFile: source.get<string>('existingPomFile', '') || undefined,
         existingTestFile: source.get<string>('existingTestFile', '') || undefined,
+        testCaseExcelPath: source.get<string>('testCaseExcelPath', '') || undefined,
     };
 }
