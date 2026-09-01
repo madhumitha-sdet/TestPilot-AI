@@ -459,7 +459,22 @@ export function getDashboardHtml(): string {
                 .tc-list, .tc-detail { flex: 1; box-sizing: border-box; }
                 .tc-list h3, .tc-detail h3 { margin-top: 0; font-size: var(--font-base); }
 
+                .tc-search-input {
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 6px 8px;
+                    margin-bottom: var(--space-2);
+                    border: 1px solid var(--vscode-input-border);
+                    background: var(--vscode-input-background);
+                    color: var(--vscode-input-foreground);
+                    font-size: var(--font-sm);
+                }
+
+                .tc-list-count { font-size: var(--font-xs); color: var(--vscode-descriptionForeground); margin-bottom: var(--space-2); }
+
                 .tc-list-items { display: flex; flex-direction: column; gap: 2px; }
+
+                .tc-show-more-btn { width: 100%; margin-top: var(--space-2); }
 
                 .tc-list-item {
                     display: flex;
@@ -918,6 +933,8 @@ export function getDashboardHtml(): string {
                     <div class="tc-layout">
                         <div class="card tc-list">
                             <h3>Available Test Cases</h3>
+                            <input id="tcSearchInput" class="tc-search-input" type="text" placeholder="Search by ID or title..." oninput="onTestCaseSearchInput(this.value)" />
+                            <div id="tcListCount" class="tc-list-count"></div>
                             <div id="tcGeneratedList" class="tc-list-items">
                                 <div class="empty-state">
                                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 1.5h5.5L12 4v10a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-12a.5.5 0 0 1 .5-.5z"/><path d="M9.5 1.5V4H12M5.5 8h5M5.5 10.5h5"/></svg>
@@ -925,6 +942,7 @@ export function getDashboardHtml(): string {
                                     <div class="empty-state-hint">Import a local Markdown test case to get started.</div>
                                 </div>
                             </div>
+                            <button id="tcShowMoreBtn" class="btn-secondary tc-show-more-btn" onclick="showMoreTestCases()" style="display:none;">Show more</button>
                         </div>
 
                         <div class="card tc-detail">
@@ -1457,16 +1475,71 @@ export function getDashboardHtml(): string {
                     vscode.postMessage({ command: 'selectTestCase', path: filePath });
                 }
 
+                let allTestCasesForList = [];
+                let tcSearchQuery = '';
+                const TC_PAGE_SIZE = 50;
+                let tcVisibleCount = TC_PAGE_SIZE;
+
                 function renderTestCaseList(testCases) {
+                    // Store the latest full set but deliberately do NOT reset
+                    // tcSearchQuery/tcVisibleCount here: this is re-invoked after
+                    // every selectTestCase (to refresh the "selected" highlight),
+                    // and clearing an active search on every selection would break
+                    // the very workflow this feature exists to support.
+                    allTestCasesForList = testCases || [];
+                    renderFilteredTestCaseList();
+                }
+
+                function onTestCaseSearchInput(value) {
+                    tcSearchQuery = value;
+                    tcVisibleCount = TC_PAGE_SIZE;
+                    renderFilteredTestCaseList();
+                }
+
+                function showMoreTestCases() {
+                    tcVisibleCount += TC_PAGE_SIZE;
+                    renderFilteredTestCaseList();
+                }
+
+                function matchesTestCaseSearch(tc, query) {
+                    if (!query) { return true; }
+                    const q = query.trim().toLowerCase();
+                    if (!q) { return true; }
+                    return (tc.id || '').toLowerCase().indexOf(q) !== -1 ||
+                        (tc.title || '').toLowerCase().indexOf(q) !== -1;
+                }
+
+                function renderFilteredTestCaseList() {
                     const container = document.getElementById('tcGeneratedList');
-                    if (!testCases || testCases.length === 0) {
+                    const countEl = document.getElementById('tcListCount');
+                    const showMoreBtn = document.getElementById('tcShowMoreBtn');
+
+                    if (!allTestCasesForList || allTestCasesForList.length === 0) {
+                        countEl.textContent = '';
+                        showMoreBtn.style.display = 'none';
                         container.innerHTML = '<div class="empty-state">' + icon('fileText') +
                             '<div class="empty-state-title">No test cases yet</div>' +
                             '<div class="empty-state-hint">Import a local Markdown test case to get started.</div></div>';
                         return;
                     }
+
+                    const matches = allTestCasesForList.filter(function (tc) { return matchesTestCaseSearch(tc, tcSearchQuery); });
+
+                    if (matches.length === 0) {
+                        countEl.textContent = '';
+                        showMoreBtn.style.display = 'none';
+                        container.innerHTML = '<div class="empty-state">' + icon('fileText') +
+                            '<div class="empty-state-title">No matching test cases</div>' +
+                            '<div class="empty-state-hint">Try a different search term.</div></div>';
+                        return;
+                    }
+
+                    const visible = matches.slice(0, tcVisibleCount);
+                    countEl.textContent = 'Showing ' + visible.length + ' of ' + matches.length + ' test case(s)' +
+                        (matches.length !== allTestCasesForList.length ? ' (' + allTestCasesForList.length + ' total)' : '');
+
                     container.innerHTML = '';
-                    testCases.forEach(function (tc) {
+                    visible.forEach(function (tc) {
                         const item = document.createElement('div');
                         item.className = 'tc-list-item' + (tc.filePath === selectedTestCasePath ? ' selected' : '');
                         item.tabIndex = 0;
@@ -1482,6 +1555,8 @@ export function getDashboardHtml(): string {
                         item.onkeydown = handler;
                         container.appendChild(item);
                     });
+
+                    showMoreBtn.style.display = matches.length > visible.length ? 'block' : 'none';
                 }
 
                 let activeMapping = null;

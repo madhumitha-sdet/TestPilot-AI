@@ -21,7 +21,42 @@ import { ensureScreenshotOnFailureHook, ensurePytestHtmlReporting } from './repo
 import { ensureTestCaseContext, readUserSectionForGeneration } from './testCaseContext';
 import { looksLikeSecretContent } from './secretsFilter';
 import { CaptureController, CaptureStatusMessage, LocatorCandidatesMessage } from './captureController';
+import { NormalizedTestCase } from './testCaseModel';
 
+/**
+ * In-memory cache for the Excel half of listTestCases, keyed by the
+ * configured workbook path and its on-disk modification time. Re-parsing a
+ * large workbook (XLSX.readFile + per-sheet parsing) on every Test Cases
+ * page visit and every post-selection refresh is otherwise wasted, repeated
+ * work. Keyed by mtime (not just path) so an edited workbook is always
+ * re-read rather than served stale. Local Markdown test cases are cheap to
+ * re-list (a directory read) and are intentionally NOT cached here — always
+ * read fresh so local behavior is unaffected.
+ */
+let excelTestCaseCache: { path: string; mtimeMs: number; testCases: NormalizedTestCase[]; errors: string[] } | null = null;
+
+function getExcelTestCasesCached(excelPath: string): { testCases: NormalizedTestCase[]; errors: string[] } {
+    if (!excelPath) {
+        excelTestCaseCache = null;
+        return { testCases: [], errors: [] };
+    }
+
+    let mtimeMs: number;
+    try {
+        mtimeMs = fs.statSync(excelPath).mtimeMs;
+    } catch {
+        excelTestCaseCache = null;
+        return { testCases: [], errors: [`Excel file not found: ${excelPath}`] };
+    }
+
+    if (excelTestCaseCache && excelTestCaseCache.path === excelPath && excelTestCaseCache.mtimeMs === mtimeMs) {
+        return { testCases: excelTestCaseCache.testCases, errors: excelTestCaseCache.errors };
+    }
+
+    const result = readExcelWorkbook(excelPath);
+    excelTestCaseCache = { path: excelPath, mtimeMs, testCases: result.testCases, errors: result.errors };
+    return result;
+}
 
 /**
  * For an empty-project bootstrap only: ensures requirements.txt lists the
@@ -172,9 +207,7 @@ export function activate(context: vscode.ExtensionContext) {
                     const config = loadFrameworkConfig();
                     const localTestCases = listGeneratedTestCaseFiles(config.projectPath);
 
-                    const excelResult = config.testCaseExcelPath
-                        ? readExcelWorkbook(config.testCaseExcelPath)
-                        : { testCases: [], errors: [] };
+                    const excelResult = getExcelTestCasesCached(config.testCaseExcelPath || '');
 
                     if (excelResult.errors.length > 0) {
                         vscode.window.showWarningMessage(
