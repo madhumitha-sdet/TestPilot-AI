@@ -27,6 +27,13 @@ const TEXT_FILE_EXTENSIONS = new Set([
 
 const SECRET_CONTENT_PATTERN = /(api[_-]?key|password|secret|token)\s*[:=]\s*['"]?[A-Za-z0-9_\-.]{6,}['"]?/i;
 
+/** True if content looks like it contains an inline secret-like value
+ * (api key, password, secret, token assignment). Best-effort, not a
+ * guarantee — a heuristic net, not a scanner. */
+export function looksLikeSecretContent(content: string): boolean {
+    return SECRET_CONTENT_PATTERN.test(content);
+}
+
 export function isExcludedDirectory(name: string): boolean {
     return EXCLUDED_DIR_NAMES.has(name);
 }
@@ -62,7 +69,7 @@ export function readIfSafe(absolutePath: string, filename: string): string | und
     } catch {
         return undefined;
     }
-    if (SECRET_CONTENT_PATTERN.test(content)) {
+    if (looksLikeSecretContent(content)) {
         return undefined;
     }
     return content;

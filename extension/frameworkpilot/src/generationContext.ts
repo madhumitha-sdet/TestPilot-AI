@@ -21,6 +21,10 @@ export interface GenerationContext {
     frameworkConfig: FrameworkConfig;
     instructions?: string;
     skill?: string;
+    /** Optional, per-test-case human-authored guidance from the Automation
+     * Context file — never the auto-generated Test Case section, which
+     * would duplicate `testCase`/`steps` above. Additive only. */
+    testCaseContext?: string;
     projectIsEmpty: boolean;
     bootstrapCategories?: string[];
     project: BoundedProjectContext;

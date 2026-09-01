@@ -26,11 +26,11 @@ export interface RolePattern {
 const CONVENTIONS: Record<string, { rolePatterns: RolePattern[]; bootstrapCategories: string[]; requiredDependencies: string[]; postInstallSteps: string[] }> = {
     'python:playwright:pytest:page_object_model': {
         rolePatterns: [
+            { role: 'base_class', pathPattern: /base_(page|test)\.py$/i },
             { role: 'page_object', pathPattern: /(^|\/)(pages|page_objects)\/.*\.py$/i },
             { role: 'page_object', pathPattern: /page\.py$/i },
             { role: 'test', pathPattern: /(^|\/)tests?\/.*test_.*\.py$/i },
             { role: 'test', pathPattern: /^test_.*\.py$/i },
-            { role: 'base_class', pathPattern: /base_(page|test)\.py$/i },
             { role: 'fixture', pathPattern: /conftest\.py$/i },
             { role: 'fixture', pathPattern: /(^|\/)fixtures\/.*\.py$/i },
             { role: 'config', pathPattern: /(pytest\.ini|pyproject\.toml|setup\.cfg|\.env\.example)$/i },
@@ -56,10 +56,16 @@ const CONVENTIONS: Record<string, { rolePatterns: RolePattern[]; bootstrapCatego
         ],
         // Generic mechanical facts about this stack's tooling — not
         // project conventions. Project-specific behavior (sync/async,
-        // Page Object design, naming, fixtures, logging, reporting,
-        // etc.) must never be added here; that belongs in the target
-        // project's own instructions.md / skill.md.
-        requiredDependencies: ['pytest', 'pytest-playwright', 'playwright'],
+        // Page Object design, naming, fixtures, logging, etc.) must never
+        // be added here; that belongs in the target project's own
+        // instructions.md / skill.md. pytest-html is the one reporting
+        // dependency treated as stack-mechanical rather than a project
+        // convention, since it's this stack's default HTML reporting
+        // mechanism (paired with the deterministic screenshot-on-failure
+        // hook in reportingGuarantees.ts) — a project's own reporting
+        // *conventions* (styling, additional plugins, etc.) still belong
+        // in instructions.md, not here.
+        requiredDependencies: ['pytest', 'pytest-playwright', 'playwright', 'pytest-html'],
         postInstallSteps: ['playwright install'],
     },
 };

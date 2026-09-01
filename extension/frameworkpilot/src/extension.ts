@@ -16,6 +16,10 @@ import { reviewAndApplyChanges, registerProposedContentProvider } from './change
 import { readExcelWorkbook, readExcelTestCaseBySyntheticPath } from './excelTestCaseReader';
 import { buildBoundedProjectContext } from './boundedContextBuilder';
 import { getBootstrapCategories, getRequiredDependencies, getPostInstallSteps } from './frameworkFileConventions';
+import { validateGeneratedProject } from './generationValidation';
+import { ensureScreenshotOnFailureHook, ensurePytestHtmlReporting } from './reportingGuarantees';
+import { ensureTestCaseContext, readUserSectionForGeneration } from './testCaseContext';
+import { looksLikeSecretContent } from './secretsFilter';
 import { CaptureController, CaptureStatusMessage, LocatorCandidatesMessage } from './captureController';
 
 
@@ -229,12 +233,33 @@ export function activate(context: vscode.ExtensionContext) {
                             ? readExcelTestCaseBySyntheticPath(config.testCaseExcelPath || '', message.path)
                             : readLocalTestCaseFile(message.path);
                         await context.workspaceState.update('frameworkpilot.selectedTestCasePath', message.path);
-                        panel.webview.postMessage({ command: 'testCaseSelected', testCase });
+
+                        let hasAutomationContext = false;
+                        if (config.projectPath) {
+                            const contextResult = ensureTestCaseContext(config.projectPath, testCase);
+                            hasAutomationContext = true;
+                            if (contextResult.unmanaged) {
+                                vscode.window.showWarningMessage(
+                                    `${testCase.id}'s Automation Context file is missing its generated-section marker, so FrameworkPilot left it untouched. See .frameworkpilot/testcase-context/${testCase.id}.md.`
+                                );
+                            }
+                        }
+
+                        panel.webview.postMessage({ command: 'testCaseSelected', testCase, hasAutomationContext });
                     } catch (err) {
                         vscode.window.showErrorMessage(
                             `Failed to select test case: ${err instanceof Error ? err.message : String(err)}`
                         );
                     }
+                } else if (message.command === 'openTestCaseContext') {
+                    const config = loadFrameworkConfig();
+                    if (!config.projectPath) {
+                        vscode.window.showErrorMessage('Set a Project Path in Framework Configuration first.');
+                        return;
+                    }
+                    const { filePath } = ensureTestCaseContext(config.projectPath, message.testCase);
+                    const doc = await vscode.workspace.openTextDocument(filePath);
+                    await vscode.window.showTextDocument(doc, { preview: false });
                 } else if (message.command === 'requestTestCaseMapping') {
                     const existing = loadTestCaseMapping(context, message.testCase.filePath);
                     const mapping = existing || buildInitialMapping(message.testCase);
@@ -315,6 +340,14 @@ export function activate(context: vscode.ExtensionContext) {
 
                 let project = buildBoundedProjectContext(config.projectPath, config, testCase, mapping, testData);
 
+                let testCaseContext = readUserSectionForGeneration(config.projectPath, testCase);
+                if (testCaseContext && looksLikeSecretContent(testCaseContext)) {
+                    testCaseContext = undefined;
+                    vscode.window.showWarningMessage(
+                        `${testCase.id}'s Automation Context looks like it may contain a secret and was excluded from generation. Please remove it from the context file.`
+                    );
+                }
+
                 const generationContext: GenerationContext = {
                     testCase,
                     steps: trimMappingForContext(mapping),
@@ -322,6 +355,7 @@ export function activate(context: vscode.ExtensionContext) {
                     frameworkConfig: config,
                     instructions: readInstructions(config.projectPath),
                     skill: readSkill(config.projectPath),
+                    testCaseContext,
                     projectIsEmpty,
                     bootstrapCategories: projectIsEmpty ? getBootstrapCategories(config) : undefined,
                     project,
@@ -358,12 +392,26 @@ export function activate(context: vscode.ExtensionContext) {
                 if (projectIsEmpty) {
                     ensureRequiredDependencies(result.changes, config);
                     ensureSetupInstructions(result.changes, config);
+                    ensureScreenshotOnFailureHook(result.changes);
+                    ensurePytestHtmlReporting(result.changes);
                 }
+
+                const advisoryWarnings = validateGeneratedProject(result.changes, config, {
+                    projectIsEmpty,
+                    existingProjectPaths: project.structureSummary
+                        .filter((f) => !f.isDirectory)
+                        .map((f) => f.relativePath),
+                });
+
+                const advisoryNote = advisoryWarnings.length > 0
+                    ? ` Advisory checks flagged ${advisoryWarnings.length} item(s) for your review: ` +
+                      advisoryWarnings.map((w) => w.message).join(' | ')
+                    : '';
 
                 panel.webview.postMessage({
                     command: 'generationStatus',
                     status: 'reviewing',
-                    message: `Proposed ${result.changes.length} item(s). Review each diff/editor that opens in VS Code.`,
+                    message: `Proposed ${result.changes.length} item(s). Review each diff/editor that opens in VS Code.${advisoryNote}`,
                 });
 
                 const { applied, skipped, reused, cancelledRemaining } = await reviewAndApplyChanges(config.projectPath, result.changes);

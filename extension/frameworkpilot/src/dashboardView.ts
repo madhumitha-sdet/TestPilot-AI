@@ -444,6 +444,10 @@ export function getDashboardHtml(): string {
                 .tc-generate { margin-top: var(--space-4); }
                 .tc-generate h3 { font-size: var(--font-base); margin-bottom: var(--space-2); }
 
+                .tc-automation-context { margin-top: var(--space-4); }
+                .tc-automation-context h3 { font-size: var(--font-base); margin-bottom: var(--space-2); }
+                .tc-ac-status { margin-bottom: var(--space-2); }
+
                 .tc-gen-checklist { font-size: var(--font-xs); color: var(--vscode-descriptionForeground); margin-bottom: var(--space-3); }
 
                 .tc-gen-status { margin-top: var(--space-2); font-size: var(--font-xs); color: var(--vscode-descriptionForeground); max-width: 500px; }
@@ -1482,8 +1486,9 @@ export function getDashboardHtml(): string {
 
                 let activeMapping = null;
                 let activeTestData = null;
+                let currentTestCase = null;
 
-                function renderTestCaseDetail(testCase, showUseButton) {
+                function renderTestCaseDetail(testCase, showUseButton, hasAutomationContext) {
                     selectedTestCasePath = showUseButton ? selectedTestCasePath : testCase.filePath;
                     const container = document.getElementById('tcDetail');
 
@@ -1498,6 +1503,7 @@ export function getDashboardHtml(): string {
                         '<div id="tcSteps" class="tc-steps"></div>' +
                         (showUseButton ? '' : '<div id="tcTestData" class="tc-testdata"></div>') +
                         (showUseButton ? '' : '<button class="btn-secondary tc-capture-btn" onclick="startCaptureForTestCase()">' + icon('cursorClick') + 'Start Capture for This Test Case</button>') +
+                        (showUseButton ? '' : '<div id="tcAutomationContext" class="tc-automation-context"></div>') +
                         (showUseButton ? '' : '<div id="tcGenerate" class="tc-generate"></div>') +
                         '<div class="tc-raw-markdown-wrap"><div class="detail-section-label">RAW MARKDOWN</div><pre class="tc-raw-markdown">' + escapeHtml(testCase.rawMarkdown || '') + '</pre></div>';
 
@@ -1508,6 +1514,8 @@ export function getDashboardHtml(): string {
                     } else {
                         vscode.postMessage({ command: 'requestTestCaseMapping', testCase: testCase });
                         vscode.postMessage({ command: 'requestTestCaseData', testCase: testCase });
+                        currentTestCase = testCase;
+                        renderAutomationContext(!!hasAutomationContext);
                         renderWorkflowStepper();
                     }
                 }
@@ -1762,6 +1770,25 @@ export function getDashboardHtml(): string {
                     renderWorkflowStepper();
                 }
 
+                function renderAutomationContext(hasContext) {
+                    const container = document.getElementById('tcAutomationContext');
+                    if (!container) { return; }
+                    container.innerHTML =
+                        '<h3>Automation Context</h3>' +
+                        '<div class="tc-ac-status"><span class="badge ' + (hasContext ? 'badge-success' : 'badge-neutral') + '">' +
+                            icon(hasContext ? 'checkCircle' : 'circle') + (hasContext ? 'Available' : 'Not created yet') +
+                        '</span></div>' +
+                        '<p>Optional. Add existing test/Page Object pointers, business logic, test data notes, or database validation intent for this test case here — or leave it blank and FrameworkPilot proceeds normally.</p>' +
+                        '<button class="btn-secondary" onclick="openAutomationContext()">' + icon('fileText') +
+                            (hasContext ? 'Open / Edit Context' : 'Create / Open Context') +
+                        '</button>';
+                }
+
+                function openAutomationContext() {
+                    if (!currentTestCase) { return; }
+                    vscode.postMessage({ command: 'openTestCaseContext', testCase: currentTestCase });
+                }
+
                 function openProjectInVSCode() {
                     vscode.postMessage({ command: 'openProjectInVSCode' });
                 }
@@ -1797,7 +1824,7 @@ export function getDashboardHtml(): string {
                         selectedTestCasePath = message.testCase.filePath;
                         lastGenerationStage = null;
                         generationOutcome = null;
-                        renderTestCaseDetail(message.testCase, false);
+                        renderTestCaseDetail(message.testCase, false, message.hasAutomationContext);
                         vscode.postMessage({ command: 'listTestCases' });
                     } else if (message.command === 'testCaseMappingLoaded') {
                         activeMapping = message.mapping;
