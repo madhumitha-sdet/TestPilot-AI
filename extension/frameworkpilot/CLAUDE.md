@@ -464,16 +464,33 @@ Extent vs. pytest-html trade-offs — not a unilateral change.
    `tests/testdata/`, `utils/`, working reporting, and screenshot capture,
    despite instructions.md explicitly requiring a complete foundation. Two
    suspected/partially-confirmed causes:
-   - `isProjectEmpty()` may have evaluated `false` due to an OS metadata
-     file (e.g. `.DS_Store`) not being in the exclusion list — **not yet
-     confirmed via `ls -la` output**, was the open question at the point
-     this file was written.
-   - Even when `projectIsEmpty` correctly triggers the bootstrap prompt
+   - ~~`isProjectEmpty()` may have evaluated `false` due to an OS metadata
+     file (e.g. `.DS_Store`) not being in the exclusion list~~ — **CONFIRMED
+     RESOLVED.** `IGNORED_FILES_FOR_EMPTY_CHECK` in `projectInspector.ts`
+     already excludes `.ds_store`/`thumbs.db`/`desktop.ini`
+     case-insensitively (present since the file's initial commit). Verified
+     directly: created a test folder with only `instructions.md`/`skill.md`
+     plus `.DS_Store`/`Thumbs.db`/`desktop.ini`, called `isProjectEmpty()`
+     against the compiled module, got `true`; added a real file, got
+     `false`. Not the cause of the under-delivered bootstrap described
+     below — that gap is real and is the second bullet.
+   - ~~Even when `projectIsEmpty` correctly triggers the bootstrap prompt
      path, the "complete foundation" requirement is entirely
-     LLM-discretionary/prompt-based with **no deterministic guarantee or
-     post-generation validation** beyond the two files
-     (`requirements.txt`, `SETUP.md`) — everything else can be silently
-     under-delivered.
+     LLM-discretionary/prompt-based with no deterministic guarantee or
+     post-generation validation beyond the two files (`requirements.txt`,
+     `SETUP.md`)~~ — **LARGELY RESOLVED.** `reportingGuarantees.ts` now
+     deterministically guarantees the screenshot-on-failure hook and
+     pytest-html reporting config the same way `requirements.txt`/
+     `SETUP.md` already were. `generationValidation.ts`'s
+     `findMissingFoundationRoles`/`findMissingReportingSetup` add
+     post-generation visibility across all remaining bootstrap categories
+     (page objects, tests, base class, fixtures, config, test data,
+     utilities, reporting) — surfaced in the `generationStatus` message,
+     advisory-only, no auto-fix. **Still open:** this is visibility, not
+     proof — no live Extension Development Host run has actually exercised
+     these checks against a real LLM response yet (blocked by this agent
+     having no GUI/vscode.lm access), so "the bootstrap is reliably
+     complete" itself remains unverified end-to-end.
 
 2. **A generated `pytest_runtest_makereport` hook does nothing if placed
    only in `utils/reporting.py` without being registered.** Must be
@@ -510,7 +527,8 @@ Extent vs. pytest-html trade-offs — not a unilateral change.
 
 ## 12. Future Work
 
-- Confirm/fix the `isProjectEmpty()` OS-noise-file gap (`.DS_Store` etc.).
+- ~~Confirm/fix the `isProjectEmpty()` OS-noise-file gap (`.DS_Store`
+  etc.).~~ **Done** — confirmed already resolved (see Section 11, item 1).
 - Add deterministic post-generation validation for empty-project bootstrap
   completeness (does `conftest.py` exist and register reporting? does a
   test-data loader exist and get imported? is BASE_URL actually

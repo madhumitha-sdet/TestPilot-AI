@@ -3,6 +3,12 @@
   "displayName": "FrameworkPilot",
   "description": "AI-assisted SDET test automation",
   "version": "0.0.1",
+  "author": "madhumitha-sdet",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/madhumitha-sdet/TestPilot-AI.git",
+    "directory": "extension/frameworkpilot"
+  },
   "engines": {
     "vscode": "^1.107.0"
   },

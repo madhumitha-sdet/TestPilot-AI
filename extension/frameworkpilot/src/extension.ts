@@ -549,6 +549,10 @@ function getWebviewContent(): string {
                 Azure DevOps Configuration
             </div>
 
+            <p class="subtitle">
+                Azure DevOps connection settings can be configured and saved here. Fetching test cases directly from Azure DevOps is planned future work &mdash; for now, import test cases via Local Markdown or Excel Workbook in Test Cases.
+            </p>
+
             <label>Organization URL</label>
 
             <input

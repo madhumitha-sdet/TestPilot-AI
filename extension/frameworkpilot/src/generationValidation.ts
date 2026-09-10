@@ -65,22 +65,68 @@ const FOUNDATION_ROLES: { role: FileRole; label: string }[] = [
     { role: 'utility', label: 'reusable utility helpers' },
 ];
 
-/** For an empty-project bootstrap, checks which structural roles (per the
- * existing frameworkFileConventions classification) are actually
- * represented among the proposed files — the bootstrapCategories list the
- * model was prompted with is otherwise never checked for compliance. */
+/** For an empty-project bootstrap, checks which structural roles — each
+ * corresponding to one of frameworkFileConventions.ts's
+ * getBootstrapCategories() prose categories (page objects, tests, base
+ * class, fixtures, config, test data, utilities) — are actually
+ * represented among the proposed files. A reuse_only entry still counts as
+ * covering its role: role classification is purely path-based, and a
+ * reuse_only file means the model explicitly determined an existing file
+ * already handles it — a legitimate "no gap" outcome, not a missing one. */
 export function findMissingFoundationRoles(
     changes: ProposedFileChange[],
     config: FrameworkConfig
 ): ValidationWarning[] {
-    const proposedRoles = new Set(
-        changes.filter(hasContent).map((c) => classifyFileRole(c.filePath, config))
-    );
+    const proposedRoles = new Set(changes.map((c) => classifyFileRole(c.filePath, config)));
 
     return FOUNDATION_ROLES.filter(({ role }) => !proposedRoles.has(role)).map(({ label }) => ({
         category: 'foundation' as const,
         message: `No proposed file was recognized as ${label} — the bootstrap foundation may be incomplete.`,
     }));
+}
+
+/** Checks the two getBootstrapCategories() items with no dedicated
+ * FileRole to classify against — "Reporting setup" and "Screenshot-on-
+ * failure capture mechanism" — since those are identified by content, not
+ * file path. Reuses the exact markers reportingGuarantees.ts treats as
+ * authoritative ('--html=' for pytest-html, 'pytest_runtest_makereport'
+ * for the screenshot hook), so this stays a mechanical fact-check, not a
+ * new convention. By the time this runs, ensurePytestHtmlReporting/
+ * ensureScreenshotOnFailureHook have already mutated `changes` and
+ * normally guarantee both — a warning here means either the LLM used
+ * pyproject.toml (the one case those guarantees deliberately skip) or
+ * something unexpected happened, both worth surfacing. A reuse_only
+ * pytest.ini/conftest.py is trusted the same way findMissingFoundationRoles
+ * trusts reuse_only — its content can't be scanned, so its mere presence
+ * counts as coverage rather than being unfairly flagged missing. */
+export function findMissingReportingSetup(changes: ProposedFileChange[]): ValidationWarning[] {
+    const warnings: ValidationWarning[] = [];
+
+    const htmlReportCovered = changes.some((c) =>
+        c.action === 'reuse_only'
+            ? /(^|\/)(pytest\.ini|pyproject\.toml)$/i.test(c.filePath)
+            : (c.content || '').includes('--html=')
+    );
+    if (!htmlReportCovered) {
+        warnings.push({
+            category: 'foundation',
+            message: 'No proposed file appears to configure pytest-html (--html=) reporting — reporting setup may be incomplete.',
+        });
+    }
+
+    const screenshotHookCovered = changes.some((c) =>
+        c.action === 'reuse_only'
+            ? /conftest\.py$/i.test(c.filePath)
+            : (c.content || '').includes('pytest_runtest_makereport')
+    );
+    if (!screenshotHookCovered) {
+        warnings.push({
+            category: 'foundation',
+            message: 'No proposed file appears to implement a screenshot-on-failure hook (pytest_runtest_makereport) — failure evidence capture may be incomplete.',
+        });
+    }
+
+    return warnings;
 }
 
 function extractImportedModules(content: string): string[] {
@@ -167,6 +213,7 @@ export function validateGeneratedProject(
 
     if (opts.projectIsEmpty) {
         warnings.push(...findMissingFoundationRoles(changes, config));
+        warnings.push(...findMissingReportingSetup(changes));
     }
 
     return warnings;

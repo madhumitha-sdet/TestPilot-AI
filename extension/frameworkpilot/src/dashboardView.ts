@@ -854,6 +854,7 @@ export function getDashboardHtml(): string {
                                 <option value="existing">Use an existing framework/project</option>
                                 <option value="new">Create a new framework</option>
                             </select>
+                            <div class="fw-stack-caption">Not yet read by Generate Automation &mdash; whether your Project Path is empty or existing is detected automatically instead.</div>
 
                             <div class="fw-stack-caption" style="margin-top: var(--space-4);">Supported Stack</div>
                             <div class="fw-stack-row" id="fwStackChips"></div>
@@ -895,6 +896,8 @@ export function getDashboardHtml(): string {
                                 <input id="fwExistingTestFile" placeholder="Path to an existing test file" />
                                 <button class="btn-secondary" onclick="pickPath('existingTestFile')">Browse...</button>
                             </div>
+
+                            <div class="fw-stack-caption">Test Case File, Existing POM File, and Existing Test File are saved for reference but not yet read by Generate Automation.</div>
 
                             <label for="fwTestCaseExcelPath">Test Case Excel Workbook (optional)</label>
                             <div class="fw-path-row">
@@ -1028,7 +1031,7 @@ export function getDashboardHtml(): string {
                     <div id="adoConfig" class="card" style="display:none; max-width: 500px; margin-top: var(--space-4);">
                         <div class="callout">
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6.5"/><path d="M8 7.2v3.6M8 5v.1"/></svg>
-                            <span>This saves connection settings only. No Azure DevOps API calls are made yet.</span>
+                            <span>Azure DevOps connection settings can be configured and saved here. Fetching test cases directly from Azure DevOps is planned future work &mdash; for now, import test cases via Local Markdown or Excel Workbook in Test Cases.</span>
                         </div>
 
                         <label for="organizationUrl">Organization URL</label>

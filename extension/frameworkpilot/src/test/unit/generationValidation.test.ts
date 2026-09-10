@@ -2,6 +2,7 @@ import * as assert from 'assert/strict';
 import {
     findAsyncViolations,
     findMissingFoundationRoles,
+    findMissingReportingSetup,
     findBrokenLocalImports,
     validateGeneratedProject,
 } from '../../generationValidation';
@@ -65,6 +66,43 @@ describe('generationValidation.findMissingFoundationRoles', () => {
         const warnings = findMissingFoundationRoles(changes, config);
         assert.ok(!warnings.some((w) => /Page Object/.test(w.message)));
         assert.ok(!warnings.some((w) => /test file/.test(w.message)));
+    });
+
+    it('does not flag a role covered only by a reuse_only entry', () => {
+        const changes = [
+            { filePath: 'pages/login_page.py', action: 'reuse_only', reason: 'already exists' } as ProposedFileChange,
+            { filePath: 'conftest.py', action: 'reuse_only', reason: 'already exists' } as ProposedFileChange,
+            change('tests/test_login.py', 'def test_login():\n    pass\n'),
+        ];
+        const warnings = findMissingFoundationRoles(changes, config);
+        assert.ok(!warnings.some((w) => /Page Object/.test(w.message)));
+        assert.ok(!warnings.some((w) => /fixtures/.test(w.message)));
+    });
+});
+
+describe('generationValidation.findMissingReportingSetup', () => {
+    it('flags both when neither marker is present', () => {
+        const changes = [change('tests/test_login.py', 'def test_login():\n    pass\n')];
+        const warnings = findMissingReportingSetup(changes);
+        assert.equal(warnings.length, 2);
+        assert.ok(warnings.some((w) => /--html=/.test(w.message)));
+        assert.ok(warnings.some((w) => /pytest_runtest_makereport/.test(w.message)));
+    });
+
+    it('does not flag when both markers are present', () => {
+        const changes = [
+            change('pytest.ini', '[pytest]\naddopts = --html=reports/report.html --self-contained-html\n'),
+            change('conftest.py', 'def pytest_runtest_makereport(item, call):\n    pass\n'),
+        ];
+        assert.deepEqual(findMissingReportingSetup(changes), []);
+    });
+
+    it('does not flag a reuse_only pytest.ini or conftest.py', () => {
+        const changes = [
+            { filePath: 'pytest.ini', action: 'reuse_only', reason: 'already configured' } as ProposedFileChange,
+            { filePath: 'conftest.py', action: 'reuse_only', reason: 'already has the hook' } as ProposedFileChange,
+        ];
+        assert.deepEqual(findMissingReportingSetup(changes), []);
     });
 });
 
