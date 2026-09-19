@@ -287,6 +287,3 @@ FrameworkPilot was built to explore how AI can be integrated into practical SDET
 
 **The objective is not autonomous test generation. The objective is engineer-assisted automation acceleration.**
 
-```
-xt highest-value thing: **add the screenshots folder + only the most important screenshots.**
-```
