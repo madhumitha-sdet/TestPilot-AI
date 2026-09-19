@@ -223,6 +223,16 @@ Native VS Code diff review provides an explicit human checkpoint before changes 
 
 ---
 
+## 🧪 Generated Automation Example
+
+FrameworkPilot can bootstrap or generate automation within a configured Playwright + Pytest project context.
+
+The [`frameworkpilot-test-automation`](https://github.com/madhumitha-sdet/frameworkpilot-test-automation) project is an example automation framework generated and developed using FrameworkPilot.
+
+It demonstrates the type of Playwright/Pytest automation project that FrameworkPilot is designed to produce and structure.
+
+> FrameworkPilot assists with generation and validation; generated automation remains subject to engineer review before changes are applied.
+
 ## 📋 Example Workflow
 
 A typical automation workflow can look like:
